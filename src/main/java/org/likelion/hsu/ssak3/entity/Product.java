@@ -20,13 +20,13 @@ public class Product extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔹 판매자 정보 (순환참조 방지)
+    // 판매자 정보 (순환참조 방지)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     @JsonIgnore
     private UserProfile seller;
 
-    // 🔹 카테고리 정보 (순환참조 방지)
+    // 카테고리 정보 (순환참조 방지)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnore
@@ -45,7 +45,7 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private ProductStatus status = ProductStatus.ON_SALE;
 
-    // 🔹 이미지 목록
+    // 이미지 목록
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference   // ✅ 순환참조 끊기 (Product → ProductImage 방향만 직렬화)
     private List<ProductImage> images = new ArrayList<>();

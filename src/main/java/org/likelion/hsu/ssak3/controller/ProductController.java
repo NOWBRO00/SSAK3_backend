@@ -1,8 +1,8 @@
 package org.likelion.hsu.ssak3.controller;
 
+import org.likelion.hsu.ssak3.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.likelion.hsu.ssak3.entity.Product;
-import org.likelion.hsu.ssak3.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

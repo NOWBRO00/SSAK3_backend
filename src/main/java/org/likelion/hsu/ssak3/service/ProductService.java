@@ -1,18 +1,25 @@
 package org.likelion.hsu.ssak3.service;
 
-import org.likelion.hsu.ssak3.entity.*;
-import org.likelion.hsu.ssak3.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.likelion.hsu.ssak3.entity.*;
+import org.likelion.hsu.ssak3.repository.CategoryRepository;
+import org.likelion.hsu.ssak3.repository.ProductImageRepository;
+import org.likelion.hsu.ssak3.repository.ProductRepository;
+import org.likelion.hsu.ssak3.repository.UserProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -41,13 +48,13 @@ public class ProductService {
             List<MultipartFile> images
     ) throws IOException {
 
-        // 1️⃣ 카테고리 & 판매자 조회
+        // 카테고리 & 판매자 조회
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
         UserProfile seller = userProfileRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 2️⃣ 상품 엔티티 생성 및 저장
+        // 상품 엔티티 생성 및 저장
         Product product = new Product();
         product.setTitle(title);
         product.setPrice(price);
@@ -58,7 +65,7 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        // 3️⃣ 이미지 처리
+        // 이미지 처리
         if (images != null && !images.isEmpty()) {
             List<ProductImage> imageEntities = new ArrayList<>();
 
@@ -88,7 +95,7 @@ public class ProductService {
                 }
             }
 
-            // 4️⃣ Product에 이미지 세팅
+            // Product에 이미지 세팅
             savedProduct.setImages(imageEntities);
         }
 
