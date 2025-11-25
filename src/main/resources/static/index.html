@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSAKSSEURI | 믿음직한 중고거래</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: #fff;
+            color: #222;
+            margin: 0;
+            max-width: 420px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        header img.logo {
+            height: 24px;
+        }
+
+        .banner {
+            padding: 16px;
+        }
+
+        .banner img {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .categories {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 8px;
+            background: #fff;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .cat {
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .cat-icon {
+            width: 50px;
+            height: 50px;
+            background: #222;
+            border-radius: 50%;
+            margin: auto;
+            margin-bottom: 4px;
+        }
+
+        .recommend {
+            font-weight: 600;
+            margin: 16px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 0 16px 80px;
+        }
+
+        .product {
+            background: #fff;
+            border: 1px solid #f2f2f2;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .product img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 8px;
+        }
+
+        .title { font-size: 14px; font-weight: 600; }
+        .price { color: #8B4513; font-weight: 700; margin-top: 2px; }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #eee;
+            padding: 6px 0;
+        }
+
+        footer button {
+            background: none;
+            border: none;
+            font-size: 12px;
+            color: #888;
+        }
+
+        footer button.active {
+            color: #8B4513;
+            font-weight: 600;
+        }
+
+        /* 상품등록 모달 */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            padding: 20px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            margin: 6px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .submit-btn {
+            background: #8B4513;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <img src="https://i.imgur.com/Dx1m8Ct.png" alt="ssaksseuri" class="logo">
+    <img src="https://i.imgur.com/SmM5b2F.png" alt="search" style="width:22px;height:22px;">
+</header>
+
+<section class="banner">
+    <img src="https://i.imgur.com/H8tGXGy.png" alt="banner">
+</section>
+
+<div class="categories">
+    <div class="cat"><div class="cat-icon"></div>도서/문구</div>
+    <div class="cat"><div class="cat-icon"></div>의류</div>
+    <div class="cat"><div class="cat-icon"></div>가전/주방</div>
+    <div class="cat"><div class="cat-icon"></div>도우미</div>
+    <div class="cat"><div class="cat-icon"></div>기타</div>
+</div>
+
+<div class="recommend">민영 님 이런 상품은 어떠세요?</div>
+<div class="product-grid" id="productList"></div>
+
+<footer>
+    <button>마이페이지</button>
+    <button class="active">메인</button>
+    <button onclick="openModal()">상품등록</button>
+    <button>1:1 채팅</button>
+</footer>
+
+<!-- 상품등록 모달 -->
+<div class="modal" id="uploadModal">
+    <div class="modal-content">
+        <h3>상품 등록하기</h3>
+        <input type="text" id="title" placeholder="제목 입력" />
+        <input type="number" id="price" placeholder="가격" />
+        <select id="category">
+            <option value="">카테고리 선택</option>
+            <option value="1">의류</option>
+            <option value="2">가전/주방</option>
+        </select>
+        <textarea id="description" rows="4" placeholder="상세 내용"></textarea>
+        <input type="file" id="images" multiple />
+        <button class="submit-btn" onclick="uploadProduct()">상품 등록</button>
+        <button class="submit-btn" style="background:#ccc;" onclick="closeModal()">닫기</button>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = "http://localhost:8080/api";
+    async function loadProducts() {
+        const res = await fetch(`${BASE_URL}/products`);
+        const products = await res.json();
+        const list = document.getElementById("productList");
+        list.innerHTML = products.map(p => `
+        <div class="product">
+          <img src="${p.images?.[0]?.imageUrl || 'https://placehold.co/200x200'}" />
+          <div class="product-info">
+            <div class="title">${p.title}</div>
+            <div class="price">${p.price.toLocaleString()}원</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function uploadProduct() {
+        const formData = new FormData();
+        formData.append("title", document.getElementById("title").value);
+        formData.append("price", document.getElementById("price").value);
+        formData.append("description", document.getElementById("description").value);
+        formData.append("categoryId", document.getElementById("category").value);
+
+        const files = document.getElementById("images").files;
+        for (let f of files) {
+            formData.append("images", f);
+        }
+
+        const res = await fetch(`${BASE_URL}/products/with-upload`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (res.ok) {
+            alert("상품이 등록되었습니다!");
+            closeModal();
+            loadProducts();
+        } else {
+            alert("등록 실패");
+        }
+    }
+
+    function openModal() {
+        document.getElementById("uploadModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("uploadModal").style.display = "none";
+    }
+
+    loadProducts();
+</script>
+</body>
+</html>

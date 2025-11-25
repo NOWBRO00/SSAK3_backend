@@ -1,13 +1,23 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.0'
-    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'org.example'
-version = '1.0-SNAPSHOT'
+group = 'org.likelion.hsu'
+version = '0.0.1-SNAPSHOT'
+description = 'SSAK3'
+
 java {
-    sourceCompatibility = '17'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
@@ -15,43 +25,15 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Starter Web
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    
-    // Thymeleaf 템플릿 엔진
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    
-    // Spring Boot Starter Security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    
-    // WebFlux (HTTP 클라이언트용)
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    
-    // Spring Boot Starter Data JPA (사용자 정보 저장용)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    
-    // H2 Database (개발용, 나중에 MySQL 등으로 변경 가능)
-    runtimeOnly 'com.h2database:h2'
-    
-    // Spring Boot Starter Validation
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    
-    // Jackson (JSON 처리)
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    
-    // Lombok (선택사항, 코드 간소화용)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
-    
-    // Spring Boot Starter Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    
-    // JUnit 5
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
 }
