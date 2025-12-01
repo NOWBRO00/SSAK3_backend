@@ -58,11 +58,13 @@ public class SecurityConfig {
         System.out.println("입력 매개변수 - http: " + http.getClass().getSimpleName());
         
         http
-            // CORS 설정 적용
+            // CORS 설정 적용 (CSRF 설정 전에 적용)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
             // HTTP 요청에 대한 인증/인가 규칙 설정
             .authorizeHttpRequests(authz -> authz
+                // OPTIONS 요청은 항상 허용 (CORS preflight)
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 // 인증 없이 접근 가능한 경로들
                 .requestMatchers("/api/**").permitAll()        // API 전체 허용
                 .requestMatchers("/h2-console/**").permitAll()  // H2 콘솔 (개발용)
@@ -80,6 +82,7 @@ public class SecurityConfig {
             // CSRF 보호 설정
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/h2-console/**", "/api/**")  // H2 콘솔과 API는 CSRF 보호 제외
+                // OPTIONS 요청은 authorizeHttpRequests에서 permitAll()로 설정되어 있어 자동으로 CSRF 우회됨
             )
             
             // 헤더 보안 설정
@@ -121,9 +124,16 @@ public class SecurityConfig {
         
         // 허용할 오리진 설정 (개발 및 프로덕션 환경)
         // 주의: setAllowCredentials(true)와 함께 사용할 때는 와일드카드 사용 불가
+        // 환경 변수로 Netlify 도메인을 받을 수 있도록 설정
+        String netlifyDomain = System.getenv("NETLIFY_DOMAIN");
+        if (netlifyDomain == null || netlifyDomain.isEmpty()) {
+            netlifyDomain = "https://fancy-tanuki-129c30.netlify.app";
+        }
+        
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",                              // 로컬 개발 환경
-            "https://fancy-tanuki-129c30.netlify.app"            // Netlify 배포 환경
+            "http://localhost:5173",                              // Vite 개발 서버
+            netlifyDomain                                         // Netlify 배포 환경
         ));
         
         // 허용할 HTTP 메서드 설정
