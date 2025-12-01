@@ -13,17 +13,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // 환경 변수로 Netlify 도메인을 받을 수 있도록 설정
-        String netlifyDomain = System.getenv("NETLIFY_DOMAIN");
-        if (netlifyDomain == null || netlifyDomain.isEmpty()) {
-            netlifyDomain = "https://fancy-tanuki-129c30.netlify.app";
-        }
-
         registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:5173",
-                        netlifyDomain
+                .allowedOriginPatterns(
+                        "https://fancy-tanuki-129c30.netlify.app",  // Netlify 배포 환경
+                        "http://localhost:3000",                     // 로컬 개발 환경
+                        "http://localhost:5173"                      // Vite 개발 서버
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")

@@ -116,28 +116,21 @@ public class SecurityConfig {
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("============ [SecurityConfig.java] SecurityConfig.corsConfigurationSource() 시작 ============");
-        System.out.println("입력 매개변수: 없음");
-        
         // CORS 설정 객체 생성
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 오리진 설정 (개발 및 프로덕션 환경)
-        // 주의: setAllowCredentials(true)와 함께 사용할 때는 와일드카드 사용 불가
-        // 환경 변수로 Netlify 도메인을 받을 수 있도록 설정
-        String netlifyDomain = System.getenv("NETLIFY_DOMAIN");
-        if (netlifyDomain == null || netlifyDomain.isEmpty()) {
-            netlifyDomain = "https://fancy-tanuki-129c30.netlify.app";
-        }
-        
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",                              // 로컬 개발 환경
-            "http://localhost:5173",                              // Vite 개발 서버
-            netlifyDomain                                         // Netlify 배포 환경
+        // ✅ setAllowedOriginPatterns() 사용 (Spring Security 6 권장)
+        // Render 환경에서도 안정적으로 동작하며, HTTPS, www 유무, 변동 URL 모두 허용
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "https://fancy-tanuki-129c30.netlify.app",  // Netlify 배포 환경
+            "http://localhost:3000",                     // 로컬 개발 환경
+            "http://localhost:5173"                      // Vite 개발 서버
         ));
         
         // 허용할 HTTP 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
         
         // 허용할 헤더 설정 (모든 헤더 허용)
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -154,8 +147,6 @@ public class SecurityConfig {
         // 모든 경로(/**)에 CORS 설정 적용
         source.registerCorsConfiguration("/**", configuration);
         
-        System.out.println("반환값: " + source.getClass().getSimpleName());
-        System.out.println("============ [SecurityConfig.java] SecurityConfig.corsConfigurationSource() 종료 ============");
         return source;
     }
 }
