@@ -1,13 +1,16 @@
 package org.example.config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 
@@ -97,34 +100,50 @@ public class SecurityConfig {
     }
 
     /**
+     * CORS 필터를 SecurityFilterChain보다 먼저 실행되도록 등록합니다.
+     * 
+     * Render 환경에서 OPTIONS 요청이 SecurityFilterChain까지 도달하지 못하는 경우를 해결합니다.
+     * 이 필터는 가장 높은 우선순위(Order 0)로 설정되어 모든 요청에 먼저 적용됩니다.
+     * 
+     * @return FilterRegistrationBean CORS 필터 등록 빈
+     */
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        
+        // 와일드카드 패턴 사용 (credentials와 호환)
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("*");  // 모든 오리진 허용 (패턴 사용)
+        config.addAllowedHeader("*");         // 모든 헤더 허용
+        config.addAllowedMethod("*");         // 모든 메서드 허용
+        config.setMaxAge(3600L);              // Preflight 캐시 시간
+        
+        source.registerCorsConfiguration("/**", config);
+        
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);  // SecurityFilterChain보다 먼저 실행
+        return bean;
+    }
+
+    /**
      * CORS (Cross-Origin Resource Sharing) 설정을 구성합니다.
      * 
-     * 이 설정은 다른 도메인에서의 요청을 허용하여 웹 애플리케이션의
-     * 크로스 오리진 요청을 처리할 수 있도록 합니다.
-     * 
-     * 현재 설정:
-     * - 모든 오리진 허용 (*)
-     * - 모든 HTTP 메서드 허용 (GET, POST, PUT, DELETE, OPTIONS)
-     * - 모든 헤더 허용
-     * - 인증 정보 포함 허용
-     * 
-     * 보안 고려사항:
-     * - 프로덕션 환경에서는 특정 도메인만 허용하도록 수정 필요
-     * - 현재는 개발 환경을 위해 모든 오리진을 허용
+     * SecurityFilterChain에서 사용되는 CORS 설정입니다.
      * 
      * @return CorsConfigurationSource CORS 설정이 적용된 구성 소스
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // CORS 설정 객체 생성
         CorsConfiguration configuration = new CorsConfiguration();
         
         // ✅ setAllowedOriginPatterns() 사용 (Spring Security 6 권장)
-        // Render 환경에서도 안정적으로 동작하며, HTTPS, www 유무, 변동 URL 모두 허용
+        // 와일드카드 패턴 사용으로 Render 환경에서 안정적으로 동작
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "https://fancy-tanuki-129c30.netlify.app",  // Netlify 배포 환경
-            "http://localhost:3000",                     // 로컬 개발 환경
-            "http://localhost:5173"                      // Vite 개발 서버
+            "http://localhost:*",                              // 로컬 개발 환경 (모든 포트)
+            "https://*.netlify.app",                           // Netlify 모든 서브도메인
+            "https://fancy-tanuki-129c30.netlify.app",        // Netlify 배포 환경
+            "https://ssak3-backend.onrender.com"              // Render 백엔드 도메인
         ));
         
         // 허용할 HTTP 메서드 설정

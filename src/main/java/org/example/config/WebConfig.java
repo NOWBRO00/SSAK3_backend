@@ -15,9 +15,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOriginPatterns(
+                        "http://localhost:*",                       // 로컬 개발 환경 (모든 포트)
+                        "https://*.netlify.app",                    // Netlify 모든 서브도메인
                         "https://fancy-tanuki-129c30.netlify.app",  // Netlify 배포 환경
-                        "http://localhost:3000",                     // 로컬 개발 환경
-                        "http://localhost:5173"                      // Vite 개발 서버
+                        "https://ssak3-backend.onrender.com"        // Render 백엔드 도메인
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
