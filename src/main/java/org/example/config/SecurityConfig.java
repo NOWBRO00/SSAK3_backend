@@ -21,7 +21,6 @@ import java.util.Arrays;
  * 4. 로그아웃 처리 설정
  * 
  * 현재 설정:
- * - 카카오 OAuth2 REST API 방식 사용 (Spring Security OAuth2 클라이언트 제거)
  * - 개발 환경을 위한 H2 콘솔 접근 허용
  * - API 엔드포인트에 대한 CORS 및 CSRF 설정
  * 
@@ -46,9 +45,8 @@ public class SecurityConfig {
      * 인증이 필요하지 않은 경로:
      * - "/" (홈페이지)
      * - "/login/**" (로그인 관련 모든 경로)
-     * - "/callback" (카카오 OAuth2 콜백)
      * - "/h2-console/**" (H2 데이터베이스 콘솔)
-     * - "/api/health", "/api/user" (API 엔드포인트)
+     * - "/api/**" (모든 API 엔드포인트)
      * 
      * @param http HttpSecurity 객체
      * @return SecurityFilterChain 구성된 보안 필터 체인
@@ -66,10 +64,10 @@ public class SecurityConfig {
             // HTTP 요청에 대한 인증/인가 규칙 설정
             .authorizeHttpRequests(authz -> authz
                 // 인증 없이 접근 가능한 경로들
-                .requestMatchers("/", "/login/**", "/callback").permitAll()  // 홈, 로그인, 콜백
-                .requestMatchers("/h2-console/**").permitAll()               // H2 콘솔 (개발용)
-                .requestMatchers("/api/health", "/api/user").permitAll()     // API 엔드포인트
-                .anyRequest().authenticated()                                // 나머지 모든 요청은 인증 필요
+                .requestMatchers("/api/**").permitAll()        // API 전체 허용
+                .requestMatchers("/h2-console/**").permitAll()  // H2 콘솔 (개발용)
+                .requestMatchers("/", "/login/**").permitAll()  // 홈, 로그인 페이지
+                .anyRequest().permitAll()                      // 나머지 모든 요청 허용 (개발용)
             )
             
             // 로그아웃 처리 설정
@@ -86,7 +84,7 @@ public class SecurityConfig {
             
             // 헤더 보안 설정
             .headers(headers -> headers
-                .frameOptions().sameOrigin()  // 같은 출처에서만 iframe 허용 (H2 콘솔용)
+                .frameOptions(frame -> frame.disable())  // H2 콘솔용 iframe 허용
             );
 
         SecurityFilterChain result = http.build();

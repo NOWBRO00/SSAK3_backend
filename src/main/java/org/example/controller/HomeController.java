@@ -49,22 +49,20 @@ public class HomeController {
     }
 
     /**
-     * 로그인 요청을 카카오 로그인 페이지로 리다이렉트합니다.
+     * 로그인 페이지로 리다이렉트합니다.
      * 
-     * 사용자가 /login URL에 접근하면 카카오 로그인 페이지로 리다이렉트됩니다.
-     * 실제 카카오 로그인 페이지는 KakaoLoginController에서 처리됩니다.
+     * 사용자가 /login URL에 접근하면 로그인 페이지로 리다이렉트됩니다.
      * 
      * URL: GET /login
      * 
-     * @return String "redirect:/login/page" - 카카오 로그인 페이지로 리다이렉트
+     * @return String "redirect:/login/page" - 로그인 페이지로 리다이렉트
      */
     @GetMapping("/login")
     public String login() {
         System.out.println("============ [HomeController.java] HomeController.login() 시작 ============");
         System.out.println("입력 매개변수: 없음");
         
-        // 카카오 로그인 페이지로 리다이렉트
-        // KakaoLoginController의 /login/page 엔드포인트로 이동
+        // 로그인 페이지로 리다이렉트
         String result = "redirect:/login/page";
         System.out.println("반환값: " + result);
         System.out.println("============ [HomeController.java] HomeController.login() 종료 ============");

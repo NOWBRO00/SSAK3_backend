@@ -1,0 +1,135 @@
+package org.example.controller;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.entity.ChatRoom;
+import org.example.entity.Message;
+import org.example.service.ChatService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/chat")
+@RequiredArgsConstructor
+public class ChatController {
+
+    private final ChatService chatService;
+
+    // 채팅방 생성 또는 조회
+    @PostMapping("/rooms")
+    public ResponseEntity<ChatRoom> getOrCreateChatRoom(
+            @RequestParam Long buyerId,
+            @RequestParam Long sellerId,
+            @RequestParam Long productId
+    ) {
+        try {
+            ChatRoom chatRoom = chatService.getOrCreateChatRoom(buyerId, sellerId, productId);
+            log.info("채팅방 조회/생성 성공: chatRoomId={}, buyerId={}, sellerId={}, productId={}", 
+                    chatRoom.getId(), buyerId, sellerId, productId);
+            return ResponseEntity.ok(chatRoom);
+        } catch (IllegalArgumentException e) {
+            log.error("채팅방 조회/생성 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("채팅방 조회/생성 중 오류 발생", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 사용자의 채팅방 목록 조회
+    @GetMapping("/rooms/user/{userId}")
+    public ResponseEntity<List<ChatRoom>> getUserChatRooms(@PathVariable Long userId) {
+        try {
+            List<ChatRoom> chatRooms = chatService.getUserChatRooms(userId);
+            log.info("채팅방 목록 조회 성공: userId={}, count={}", userId, chatRooms != null ? chatRooms.size() : 0);
+            return ResponseEntity.ok(chatRooms != null ? chatRooms : new ArrayList<>());
+        } catch (Exception e) {
+            log.error("채팅방 목록 조회 중 오류 발생: userId={}", userId, e);
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+    }
+
+    // 채팅방의 메시지 목록 조회
+    @GetMapping("/rooms/{chatRoomId}/messages")
+    public ResponseEntity<List<Message>> getChatRoomMessages(@PathVariable Long chatRoomId) {
+        try {
+            List<Message> messages = chatService.getChatRoomMessages(chatRoomId);
+            log.info("메시지 목록 조회 성공: chatRoomId={}, count={}", chatRoomId, messages != null ? messages.size() : 0);
+            return ResponseEntity.ok(messages != null ? messages : new ArrayList<>());
+        } catch (IllegalArgumentException e) {
+            log.error("메시지 목록 조회 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("메시지 목록 조회 중 오류 발생: chatRoomId={}", chatRoomId, e);
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+    }
+
+    // 메시지 전송
+    @PostMapping("/rooms/{chatRoomId}/messages")
+    public ResponseEntity<Message> sendMessage(
+            @PathVariable Long chatRoomId,
+            @RequestParam Long senderId,
+            @RequestBody Map<String, String> request
+    ) {
+        try {
+            String content = request.get("content");
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            Message message = chatService.sendMessage(chatRoomId, senderId, content);
+            log.info("메시지 전송 성공: messageId={}, chatRoomId={}, senderId={}", 
+                    message.getId(), chatRoomId, senderId);
+            return ResponseEntity.ok(message);
+        } catch (IllegalArgumentException e) {
+            log.error("메시지 전송 실패: chatRoomId={}, senderId={}, error={}", 
+                    chatRoomId, senderId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("메시지 전송 중 오류 발생: chatRoomId={}, senderId={}", chatRoomId, senderId, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 메시지 읽음 처리
+    @PutMapping("/rooms/{chatRoomId}/read")
+    public ResponseEntity<String> markMessagesAsRead(
+            @PathVariable Long chatRoomId,
+            @RequestParam Long userId
+    ) {
+        try {
+            chatService.markMessagesAsRead(chatRoomId, userId);
+            log.info("메시지 읽음 처리 성공: chatRoomId={}, userId={}", chatRoomId, userId);
+            return ResponseEntity.ok("메시지가 읽음 처리되었습니다.");
+        } catch (IllegalArgumentException e) {
+            log.error("메시지 읽음 처리 실패: chatRoomId={}, userId={}, error={}", 
+                    chatRoomId, userId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("메시지 읽음 처리 중 오류 발생: chatRoomId={}, userId={}", chatRoomId, userId, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 채팅방 삭제
+    @DeleteMapping("/rooms/{chatRoomId}")
+    public ResponseEntity<Void> deleteChatRoom(@PathVariable Long chatRoomId) {
+        try {
+            chatService.deleteChatRoom(chatRoomId);
+            log.info("채팅방 삭제 성공: chatRoomId={}", chatRoomId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            log.error("채팅방 삭제 중 오류 발생: chatRoomId={}", chatRoomId, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+}
+
+
+
