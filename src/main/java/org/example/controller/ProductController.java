@@ -62,7 +62,7 @@ public class ProductController {
 
             Product saved = productService.createProduct(title, price.intValue(), description, categoryId, sellerId, images);
             log.info("상품 등록 성공: productId={}, title={}, sellerId={}", saved.getId(), title, sellerId);
-            return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException e) {
             log.error("상품 등록 실패 (IllegalArgumentException): {}", e.getMessage(), e);
             // IllegalArgumentException은 GlobalExceptionHandler에서 처리됨
@@ -99,9 +99,9 @@ public class ProductController {
                 return ResponseEntity.badRequest().build();
             }
 
-            Product saved = productService.createProduct(product);
+        Product saved = productService.createProduct(product);
             log.info("상품 등록 성공: productId={}, title={}", saved.getId(), saved.getTitle());
-            return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException e) {
             log.error("상품 등록 실패: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -181,9 +181,9 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         try {
-            productService.deleteProduct(id);
+        productService.deleteProduct(id);
             log.info("상품 삭제 성공: productId={}", id);
-            return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("상품 삭제 중 오류 발생: productId={}", id, e);
             return ResponseEntity.internalServerError().build();

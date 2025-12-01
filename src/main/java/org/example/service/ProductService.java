@@ -97,20 +97,20 @@ public class ProductService {
                         // 파일명 생성
                         String uniqueName = UUID.randomUUID().toString().replace("-", "") + "_" + safeFilename;
 
-                        // 실제 파일 저장
-                        File destination = new File(UPLOAD_DIR + uniqueName);
-                        file.transferTo(destination);
+                    // 실제 파일 저장
+                    File destination = new File(UPLOAD_DIR + uniqueName);
+                    file.transferTo(destination);
 
                         // DB에 이미지 정보 저장 (URL은 웹 경로로 저장)
                         String imageUrl = "/uploads/" + uniqueName;
-                        ProductImage image = ProductImage.builder()
-                                .product(savedProduct)
+                    ProductImage image = ProductImage.builder()
+                            .product(savedProduct)
                                 .imageUrl(imageUrl)
-                                .orderIndex(i)
-                                .build();
+                            .orderIndex(i)
+                            .build();
 
-                        productImageRepository.save(image);
-                        imageEntities.add(image);
+                    productImageRepository.save(image);
+                    imageEntities.add(image);
                     } catch (IOException e) {
                         // 개별 이미지 저장 실패 시 로그만 남기고 계속 진행
                         System.err.println("이미지 저장 실패: " + (file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown") + " - " + e.getMessage());
