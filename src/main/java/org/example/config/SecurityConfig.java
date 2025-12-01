@@ -119,17 +119,32 @@ public class SecurityConfig {
         // CORS 설정 객체 생성
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 오리진 설정 (현재는 모든 오리진 허용)
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        // 허용할 오리진 설정 (개발 및 프로덕션 환경)
+        // 주의: setAllowCredentials(true)와 함께 사용할 때는 와일드카드 사용 불가
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",                              // 로컬 개발 환경
+            "https://fancy-tanuki-129c30.netlify.app"            // Netlify 배포 환경
+        ));
         
         // 허용할 HTTP 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
-        // 허용할 헤더 설정 (현재는 모든 헤더 허용)
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // 허용할 헤더 설정
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
         
         // 인증 정보(쿠키, Authorization 헤더 등) 포함 허용
         configuration.setAllowCredentials(true);
+        
+        // Preflight 요청 캐시 시간 (초)
+        configuration.setMaxAge(3600L);
         
         // URL 기반 CORS 구성 소스 생성
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
