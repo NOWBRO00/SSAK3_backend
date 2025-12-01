@@ -1,9 +1,8 @@
 package org.example.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
@@ -20,29 +19,30 @@ import java.util.Map;
  * @version 1.0
  * @since 2024-10-05
  */
-@Controller
+@RestController
 public class HomeController {
 
     /**
-     * 애플리케이션의 홈페이지를 표시합니다.
+     * 애플리케이션의 홈페이지를 JSON 형태로 반환합니다.
      * 
-     * 현재는 단순한 홈페이지만 제공하며, 향후 로그인된 사용자 정보나
-     * 애플리케이션 메인 기능들을 표시할 수 있습니다.
+     * REST API 방식으로 구현되어 JSON 응답을 반환합니다.
      * 
      * URL: GET /
      * 
-     * @param model Thymeleaf 템플릿에 데이터를 전달하기 위한 Model 객체
-     * @return String "home" - home.html 템플릿 파일명
+     * @return Map<String, Object> 애플리케이션 정보가 담긴 JSON 응답
      */
     @GetMapping("/")
-    public String home(Model model) {
+    @ResponseBody
+    public Map<String, Object> home() {
         System.out.println("============ [HomeController.java] HomeController.home() 시작 ============");
-        System.out.println("입력 매개변수 - model: " + model);
+        System.out.println("입력 매개변수: 없음");
         
-        // REST API 방식에서는 세션 또는 JWT로 사용자 정보를 관리
-        // 현재는 단순히 홈페이지만 표시
-        // 향후 확장 가능: 로그인된 사용자 정보, 메뉴, 알림 등
-        String result = "home";
+        // REST API 방식으로 JSON 응답 반환
+        Map<String, Object> result = Map.of(
+            "message", "Ssak3 Backend API",
+            "status", "OK",
+            "version", "1.0.0"
+        );
         System.out.println("반환값: " + result);
         System.out.println("============ [HomeController.java] HomeController.home() 종료 ============");
         return result;
