@@ -49,9 +49,15 @@ public class AuthController {
 			LoginResponse response = authService.loginWithKakao(request.code());
 			log.info("카카오 로그인 성공 - 사용자 ID: {}", response.profile().id());
 			return ResponseEntity.ok(response);
+		} catch (org.example.auth.exception.KakaoApiException e) {
+			log.error("카카오 API 오류 발생 - code={}, message={}", request.code(), e.getMessage(), e);
+			throw e; // GlobalExceptionHandler에서 처리
+		} catch (IllegalArgumentException e) {
+			log.error("잘못된 요청 파라미터 - code={}, message={}", request.code(), e.getMessage(), e);
+			throw e; // GlobalExceptionHandler에서 처리
 		} catch (Exception e) {
-			log.error("카카오 로그인 처리 중 오류 발생 - code={}", request.code(), e);
-			throw e;
+			log.error("카카오 로그인 처리 중 예상치 못한 오류 발생 - code={}, error={}", request.code(), e.getClass().getSimpleName(), e);
+			throw new RuntimeException("카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
 		}
 	}
 }

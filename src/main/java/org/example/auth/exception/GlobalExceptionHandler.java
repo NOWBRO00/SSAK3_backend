@@ -61,6 +61,23 @@ public class GlobalExceptionHandler {
 				.body(new ProblemDetailResponse("INVALID_ARGUMENT", ex.getMessage()));
 	}
 
+	@ExceptionHandler(KakaoApiException.class)
+	/**
+	 * 카카오 API 호출 중 발생한 에러를 처리합니다.
+	 *
+	 * @param ex 카카오 API 예외
+	 * @return 프론트엔드에 전달할 에러 응답
+	 */
+	public ResponseEntity<ProblemDetailResponse> handleKakaoApiException(KakaoApiException ex) {
+		// 원인 예외가 있으면 더 자세한 정보 포함
+		String message = ex.getMessage();
+		if (ex.getCause() != null && ex.getCause().getMessage() != null) {
+			message = message + " | 원인: " + ex.getCause().getMessage();
+		}
+		return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+				.body(new ProblemDetailResponse("KAKAO_API_ERROR", message));
+	}
+
 	@ExceptionHandler(Exception.class)
 	/**
 	 * 정의되지 않은 모든 예외를 500 응답으로 변환합니다.
