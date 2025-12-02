@@ -13,9 +13,12 @@ spring:
   # 데이터베이스 설정 (프로덕션)
   # =============================================================================
   # Render에서 PostgreSQL 데이터베이스를 생성하면 DATABASE_URL 환경 변수가 자동으로 설정됩니다.
-  # Internal Database URL을 그대로 사용하면 됩니다.
+  # Render의 Internal Database URL은 postgresql:// 형식이므로 jdbc: 접두사를 추가해야 합니다.
   # PostgreSQL 연결 URL 형식: jdbc:postgresql://host:port/database
   datasource:
+    # Render의 DATABASE_URL은 postgresql:// 형식이므로 jdbc: 접두사가 필요합니다.
+    # DatabaseConfig에서 자동으로 변환하거나, Render 대시보드에서 직접 jdbc:postgresql:// 형식으로 설정하세요.
+    # 예: DATABASE_URL=jdbc:postgresql://host:port/database
     url: ${DATABASE_URL:jdbc:h2:mem:testdb}
     driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
     username: ${DB_USERNAME:}
