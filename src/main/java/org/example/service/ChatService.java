@@ -92,10 +92,19 @@ public class ChatService {
         }
 
         // 발신자가 채팅방의 구매자 또는 판매자인지 확인
-        if (!chatRoom.getBuyer().getId().equals(senderId) && 
-            !chatRoom.getSeller().getId().equals(senderId)) {
-            throw new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다.");
+        // senderId는 UserProfile의 id 또는 kakaoId일 수 있으므로, 실제 sender의 id로 비교
+        Long senderInternalId = sender.getId();
+        Long buyerId = chatRoom.getBuyer() != null ? chatRoom.getBuyer().getId() : null;
+        Long sellerId = chatRoom.getSeller() != null ? chatRoom.getSeller().getId() : null;
+        
+        if (!senderInternalId.equals(buyerId) && !senderInternalId.equals(sellerId)) {
+            log.error("채팅방 참여자 확인 실패: senderId={}, senderInternalId={}, buyerId={}, sellerId={}", 
+                    senderId, senderInternalId, buyerId, sellerId);
+            throw new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다. senderId: " + senderId);
         }
+        
+        log.debug("채팅방 참여자 확인 성공: senderId={}, senderInternalId={}, buyerId={}, sellerId={}", 
+                senderId, senderInternalId, buyerId, sellerId);
 
         Message message = Message.builder()
                 .chatRoom(chatRoom)
