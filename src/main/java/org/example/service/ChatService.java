@@ -276,20 +276,38 @@ public class ChatService {
                             }
                         }
                         // 메시지 초기화 (최근 메시지 정보를 위해)
-                        if (room.getMessages() != null && !room.getMessages().isEmpty()) {
-                            room.getMessages().forEach(msg -> {
-                                if (msg != null) {
-                                    msg.getId();
-                                    msg.getContent();
-                                    msg.getCreatedAt();
-                                    msg.isRead();
-                                    if (msg.getSender() != null) {
-                                        msg.getSender().getId();
-                                        msg.getSender().getNickname();
-                                    }
+                        // LazyInitializationException 방지를 위해 MessageRepository를 통해 조회
+                        try {
+                            List<Message> messages = messageRepository.findByChatRoomOrderByCreatedAtAsc(room);
+                            if (messages != null && !messages.isEmpty()) {
+                                // messages를 room에 설정 (getLastMessage()에서 사용하기 위해)
+                                // 단, 이미 초기화된 컬렉션이 있으면 교체하지 않음
+                                if (room.getMessages() == null || room.getMessages().isEmpty()) {
+                                    room.setMessages(messages);
                                 }
-                            });
-                            // getLastMessage()를 통해 최근 메시지 접근 가능
+                                // 각 메시지의 sender 초기화
+                                messages.forEach(msg -> {
+                                    try {
+                                        if (msg != null && msg.getSender() != null) {
+                                            msg.getSender().getId();
+                                            msg.getSender().getNickname();
+                                        }
+                                    } catch (Exception e) {
+                                        log.warn("메시지 {}의 sender 초기화 중 오류: {}", msg != null ? msg.getId() : "null", e.getMessage());
+                                    }
+                                });
+                            } else {
+                                // 메시지가 없으면 빈 리스트로 설정
+                                room.setMessages(new ArrayList<>());
+                            }
+                        } catch (Exception e) {
+                            log.warn("채팅방 {}의 메시지 조회 중 오류: {}", room.getId(), e.getMessage());
+                            // 메시지 조회 실패해도 채팅방은 반환 (빈 리스트로 설정)
+                            try {
+                                room.setMessages(new ArrayList<>());
+                            } catch (Exception ex) {
+                                log.warn("채팅방 {}에 빈 메시지 리스트 설정 실패: {}", room.getId(), ex.getMessage());
+                            }
                         }
                         validRooms.add(room);
                     } catch (Exception e) {

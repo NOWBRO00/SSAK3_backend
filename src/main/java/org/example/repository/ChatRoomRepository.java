@@ -22,7 +22,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     // 사용자가 참여한 채팅방 목록 조회 (구매자 또는 판매자)
-    @EntityGraph(attributePaths = {"buyer", "seller", "product", "product.seller", "product.category", "product.images", "messages", "messages.sender"})
+    // messages는 서비스 레이어에서 명시적으로 초기화 (순환 참조 방지)
+    @EntityGraph(attributePaths = {"buyer", "seller", "product", "product.seller", "product.category", "product.images"})
     List<ChatRoom> findByBuyerOrSeller(UserProfile buyer, UserProfile seller);
 
     // 특정 사용자의 채팅방 목록 조회 (구매자)
