@@ -147,34 +147,49 @@ public class ProductService {
     // 전체 상품 조회
     public List<Product> getAllProducts() {
         try {
+            log.info("전체 상품 조회 시작");
             List<Product> products = productRepository.findAll();
+            log.info("상품 조회 완료: {}개", products != null ? products.size() : 0);
+            
             // seller와 category를 명시적으로 초기화하여 LazyInitializationException 방지
             // 트랜잭션 내에서 실행되므로 안전하게 접근 가능
             if (products != null && !products.isEmpty()) {
+                List<Product> validProducts = new ArrayList<>();
                 products.forEach(product -> {
                     try {
-                        // seller 초기화
-                        if (product.getSeller() != null) {
-                            product.getSeller().getId();
-                            product.getSeller().getNickname();
+                        // seller 초기화 및 검증
+                        if (product.getSeller() == null) {
+                            log.warn("상품 {}의 seller가 null입니다. 건너뜁니다.", product.getId());
+                            return;
                         }
-                        // category 초기화
-                        if (product.getCategory() != null) {
-                            product.getCategory().getId();
-                            product.getCategory().getName();
+                        product.getSeller().getId();
+                        product.getSeller().getNickname();
+                        
+                        // category 초기화 및 검증
+                        if (product.getCategory() == null) {
+                            log.warn("상품 {}의 category가 null입니다. 건너뜁니다.", product.getId());
+                            return;
                         }
+                        product.getCategory().getId();
+                        product.getCategory().getName();
+                        
                         // images 초기화
                         if (product.getImages() != null) {
                             product.getImages().size();
                         }
+                        
+                        validProducts.add(product);
                     } catch (Exception e) {
-                        System.err.println("상품 초기화 중 오류: " + e.getMessage());
+                        log.error("상품 {} 초기화 중 오류: {}", product.getId(), e.getMessage(), e);
                     }
                 });
+                log.info("유효한 상품 {}개 반환", validProducts.size());
+                return validProducts;
             }
-            return products != null ? products : new ArrayList<>();
+            log.info("상품이 없습니다. 빈 리스트 반환");
+            return new ArrayList<>();
         } catch (Exception e) {
-            System.err.println("상품 조회 중 오류 발생: " + e.getMessage());
+            log.error("상품 조회 중 오류 발생: {}", e.getMessage(), e);
             e.printStackTrace();
             return new ArrayList<>();
         }
