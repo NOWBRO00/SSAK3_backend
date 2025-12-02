@@ -60,7 +60,8 @@ public class ProductService {
         }
         
         if (seller == null) {
-            log.error("사용자를 찾을 수 없습니다. sellerId={} (UserProfile id 또는 kakaoId로 조회 실패). 카카오 로그인을 먼저 진행해주세요.", sellerId);
+            log.error("사용자를 찾을 수 없습니다. sellerId={} (UserProfile id 또는 kakaoId로 조회 실패).", sellerId);
+            log.error("카카오 로그인 API(/api/auth/kakao)를 먼저 호출하여 사용자를 등록해야 합니다.");
             throw new IllegalArgumentException("존재하지 않는 사용자입니다. sellerId: " + sellerId + " (카카오 로그인을 먼저 진행해주세요.)");
         }
         
