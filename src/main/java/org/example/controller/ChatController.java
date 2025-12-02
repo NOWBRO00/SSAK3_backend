@@ -88,12 +88,14 @@ public class ChatController {
     @GetMapping("/rooms/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getChatRoomMessages(@PathVariable Long chatRoomId) {
         try {
+            log.info("메시지 목록 조회 요청: chatRoomId={}", chatRoomId);
             List<Message> messages = chatService.getChatRoomMessages(chatRoomId);
             log.info("메시지 목록 조회 성공: chatRoomId={}, count={}", chatRoomId, messages != null ? messages.size() : 0);
             return ResponseEntity.ok(messages != null ? messages : new ArrayList<>());
         } catch (IllegalArgumentException e) {
-            log.error("메시지 목록 조회 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage());
-            return ResponseEntity.badRequest().build();
+            log.warn("메시지 목록 조회 실패 (채팅방 없음): chatRoomId={}, error={}", chatRoomId, e.getMessage());
+            // 채팅방이 없어도 빈 리스트 반환 (프론트엔드 호환성)
+            return ResponseEntity.ok(new ArrayList<>());
         } catch (Exception e) {
             log.error("메시지 목록 조회 중 오류 발생: chatRoomId={}", chatRoomId, e);
             return ResponseEntity.ok(new ArrayList<>());

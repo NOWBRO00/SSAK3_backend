@@ -290,9 +290,16 @@ public class ChatService {
 
     // 채팅방의 메시지 목록 조회
     public List<Message> getChatRoomMessages(Long chatRoomId) {
+        log.info("채팅방 메시지 조회 시작: chatRoomId={}", chatRoomId);
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
-
+                .orElse(null);
+        
+        if (chatRoom == null) {
+            log.warn("채팅방을 찾을 수 없습니다: chatRoomId={}", chatRoomId);
+            throw new IllegalArgumentException("채팅방을 찾을 수 없습니다. chatRoomId: " + chatRoomId);
+        }
+        
+        log.debug("채팅방 조회 성공: chatRoomId={}", chatRoomId);
         List<Message> messages = messageRepository.findByChatRoomOrderByCreatedAtAsc(chatRoom);
         
         // Lazy 로딩 엔티티 초기화
