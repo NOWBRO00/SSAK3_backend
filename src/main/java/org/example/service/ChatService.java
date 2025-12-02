@@ -107,6 +107,85 @@ public class ChatService {
         return messageRepository.save(message);
     }
 
+    // 채팅방 상세 조회
+    public ChatRoom getChatRoomById(Long chatRoomId) {
+        try {
+            log.info("채팅방 상세 조회 시작: chatRoomId={}", chatRoomId);
+            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                    .orElse(null);
+            
+            if (chatRoom == null) {
+                log.warn("채팅방을 찾을 수 없습니다: chatRoomId={}", chatRoomId);
+                return null;
+            }
+            
+            // Lazy 로딩 엔티티 초기화
+            try {
+                if (chatRoom.getBuyer() != null) {
+                    chatRoom.getBuyer().getId();
+                    chatRoom.getBuyer().getNickname();
+                    chatRoom.getBuyer().getKakaoId();
+                }
+                if (chatRoom.getSeller() != null) {
+                    chatRoom.getSeller().getId();
+                    chatRoom.getSeller().getNickname();
+                    chatRoom.getSeller().getKakaoId();
+                }
+                if (chatRoom.getProduct() != null) {
+                    chatRoom.getProduct().getId();
+                    chatRoom.getProduct().getTitle();
+                    chatRoom.getProduct().getPrice();
+                    chatRoom.getProduct().getDescription();
+                    chatRoom.getProduct().getStatus();
+                    
+                    if (chatRoom.getProduct().getSeller() != null) {
+                        chatRoom.getProduct().getSeller().getId();
+                        chatRoom.getProduct().getSeller().getNickname();
+                        chatRoom.getProduct().getSeller().getKakaoId();
+                    }
+                    
+                    if (chatRoom.getProduct().getCategory() != null) {
+                        chatRoom.getProduct().getCategory().getId();
+                        chatRoom.getProduct().getCategory().getName();
+                    }
+                    
+                    if (chatRoom.getProduct().getImages() != null) {
+                        chatRoom.getProduct().getImages().size();
+                        chatRoom.getProduct().getImages().forEach(img -> {
+                            if (img != null) {
+                                img.getId();
+                                img.getImageUrl();
+                                img.getOrderIndex();
+                            }
+                        });
+                    }
+                }
+                if (chatRoom.getMessages() != null && !chatRoom.getMessages().isEmpty()) {
+                    chatRoom.getMessages().forEach(msg -> {
+                        if (msg != null) {
+                            msg.getId();
+                            msg.getContent();
+                            msg.getCreatedAt();
+                            msg.isRead();
+                            if (msg.getSender() != null) {
+                                msg.getSender().getId();
+                                msg.getSender().getNickname();
+                            }
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                log.error("채팅방 초기화 중 오류: {}", e.getMessage(), e);
+            }
+            
+            log.info("채팅방 상세 조회 성공: chatRoomId={}", chatRoomId);
+            return chatRoom;
+        } catch (Exception e) {
+            log.error("채팅방 상세 조회 중 오류 발생: chatRoomId={}, error={}", chatRoomId, e.getMessage(), e);
+            return null;
+        }
+    }
+
     // 채팅방 목록 조회 (사용자가 참여한 모든 채팅방)
     public List<ChatRoom> getUserChatRooms(Long userId) {
         try {
@@ -127,7 +206,8 @@ public class ChatService {
             
             log.debug("사용자 조회 성공 - userId={}, kakaoId={}, nickname={}", user.getId(), user.getKakaoId(), user.getNickname());
 
-            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyerOrSeller(user, user);
+            final UserProfile finalUser = user; // 람다에서 사용하기 위해 final 변수로 복사
+            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyerOrSeller(finalUser, finalUser);
             log.debug("채팅방 조회 완료: {}개", chatRooms != null ? chatRooms.size() : 0);
         
             // Lazy 로딩 엔티티 초기화
@@ -176,9 +256,21 @@ public class ChatService {
                                 });
                             }
                         }
-                        // 메시지 초기화
-                        if (room.getMessages() != null) {
-                            room.getMessages().size();
+                        // 메시지 초기화 (최근 메시지 정보를 위해)
+                        if (room.getMessages() != null && !room.getMessages().isEmpty()) {
+                            room.getMessages().forEach(msg -> {
+                                if (msg != null) {
+                                    msg.getId();
+                                    msg.getContent();
+                                    msg.getCreatedAt();
+                                    msg.isRead();
+                                    if (msg.getSender() != null) {
+                                        msg.getSender().getId();
+                                        msg.getSender().getNickname();
+                                    }
+                                }
+                            });
+                            // getLastMessage()를 통해 최근 메시지 접근 가능
                         }
                         validRooms.add(room);
                     } catch (Exception e) {

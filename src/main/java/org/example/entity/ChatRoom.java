@@ -79,5 +79,30 @@ public class ChatRoom extends BaseEntity {
     public Product getProductForJson() {
         return product;
     }
+
+    // 최근 메시지 정보 (채팅방 목록에서 사용)
+    @JsonGetter("lastMessage")
+    public Message getLastMessage() {
+        if (messages == null || messages.isEmpty()) {
+            return null;
+        }
+        // 생성 시간 기준으로 최신 메시지 반환
+        return messages.stream()
+                .max((m1, m2) -> {
+                    if (m1.getCreatedAt() == null && m2.getCreatedAt() == null) return 0;
+                    if (m1.getCreatedAt() == null) return -1;
+                    if (m2.getCreatedAt() == null) return 1;
+                    return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+                })
+                .orElse(null);
+    }
+
+    // 읽지 않은 메시지 수 (현재 사용자 기준으로 계산 필요 - 서비스 레이어에서 처리)
+    @JsonGetter("unreadCount")
+    public Long getUnreadCount() {
+        // 이 필드는 서비스 레이어에서 동적으로 설정해야 함
+        // 현재는 null 반환 (서비스에서 별도로 계산)
+        return null;
+    }
 }
 

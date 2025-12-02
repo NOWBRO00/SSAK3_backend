@@ -42,6 +42,28 @@ public class ChatController {
         }
     }
 
+    // 채팅방 상세 조회
+    @GetMapping("/rooms/{chatRoomId}")
+    public ResponseEntity<ChatRoom> getChatRoom(@PathVariable Long chatRoomId) {
+        try {
+            log.info("GET /api/chat/rooms/{} 요청 받음", chatRoomId);
+            ChatRoom chatRoom = chatService.getChatRoomById(chatRoomId);
+            if (chatRoom != null) {
+                log.info("채팅방 조회 성공: chatRoomId={}", chatRoomId);
+                return ResponseEntity.ok(chatRoom);
+            } else {
+                log.warn("채팅방을 찾을 수 없습니다: chatRoomId={}", chatRoomId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("채팅방 조회 실패: chatRoomId={}, error={}", chatRoomId, e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("채팅방 조회 중 오류 발생: chatRoomId={}, error={}", chatRoomId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     // 사용자의 채팅방 목록 조회
     @GetMapping("/rooms/user/{userId}")
     public ResponseEntity<List<ChatRoom>> getUserChatRooms(@PathVariable Long userId) {
@@ -78,20 +100,28 @@ public class ChatController {
         }
     }
 
-    // 메시지 전송
+    // 메시지 전송 (RequestBody 또는 쿼리 파라미터 모두 지원)
     @PostMapping("/rooms/{chatRoomId}/messages")
     public ResponseEntity<Message> sendMessage(
             @PathVariable Long chatRoomId,
             @RequestParam Long senderId,
-            @RequestBody Map<String, String> request
+            @RequestParam(required = false) String content,
+            @RequestBody(required = false) Map<String, String> requestBody
     ) {
         try {
-            String content = request.get("content");
-            if (content == null || content.trim().isEmpty()) {
+            // content를 RequestBody 또는 쿼리 파라미터에서 가져오기
+            String messageContent = content;
+            if (messageContent == null && requestBody != null) {
+                messageContent = requestBody.get("content");
+            }
+            
+            if (messageContent == null || messageContent.trim().isEmpty()) {
+                log.error("메시지 전송 실패: content가 비어있습니다. chatRoomId={}, senderId={}", chatRoomId, senderId);
                 return ResponseEntity.badRequest().build();
             }
             
-            Message message = chatService.sendMessage(chatRoomId, senderId, content);
+            log.info("메시지 전송 요청: chatRoomId={}, senderId={}, content={}", chatRoomId, senderId, messageContent);
+            Message message = chatService.sendMessage(chatRoomId, senderId, messageContent);
             log.info("메시지 전송 성공: messageId={}, chatRoomId={}, senderId={}", 
                     message.getId(), chatRoomId, senderId);
             return ResponseEntity.ok(message);
