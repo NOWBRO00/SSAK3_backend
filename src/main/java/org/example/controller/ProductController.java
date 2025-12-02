@@ -115,12 +115,15 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         try {
+            log.info("GET /api/products 요청 받음");
             List<Product> products = productService.getAllProducts();
             log.info("상품 조회 성공: {}개", products != null ? products.size() : 0);
             return ResponseEntity.ok(products != null ? products : new ArrayList<>());
         } catch (Exception e) {
-            log.error("상품 조회 중 오류 발생", e);
-            return ResponseEntity.ok(new ArrayList<>()); // 빈 리스트 반환
+            log.error("상품 조회 중 오류 발생: {}", e.getMessage(), e);
+            e.printStackTrace();
+            // 에러가 발생해도 빈 리스트를 반환하여 500 에러 방지
+            return ResponseEntity.ok(new ArrayList<>());
         }
     }
 
