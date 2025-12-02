@@ -205,6 +205,7 @@ public class ProductService {
                 if (product.getSeller() != null) {
                     product.getSeller().getId();
                     product.getSeller().getNickname();
+                    product.getSeller().getKakaoId(); // sellerKakaoId를 위한 초기화
                 }
                 if (product.getCategory() != null) {
                     product.getCategory().getId();

@@ -73,6 +73,11 @@ public class Product extends BaseEntity {
         return seller != null ? seller.getNickname() : null;
     }
 
+    @JsonGetter("sellerKakaoId")
+    public Long getSellerKakaoId() {
+        return seller != null ? seller.getKakaoId() : null;
+    }
+
     @JsonGetter("categoryName")
     public String getCategoryName() {
         return category != null ? category.getName() : null;
