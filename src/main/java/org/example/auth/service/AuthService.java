@@ -58,7 +58,14 @@ public class AuthService {
 		TokenPair tokens = issueToken(profile);
 
 		log.info("임시 토큰 발급 완료 - accessToken={}, refreshToken={}", tokens.accessToken(), tokens.refreshToken());
-		return new LoginResponse(tokens.accessToken(), tokens.refreshToken(), profile);
+		// 로그인 응답에 내부 userId와 kakaoId 포함
+		return new LoginResponse(
+				tokens.accessToken(), 
+				tokens.refreshToken(), 
+				profile,
+				userProfile.getId(),      // 백엔드 내부 userId
+				userProfile.getKakaoId()  // 카카오 ID (호환성)
+		);
 	}
 	
 	/**
