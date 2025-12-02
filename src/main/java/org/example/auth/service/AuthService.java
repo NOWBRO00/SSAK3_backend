@@ -68,28 +68,52 @@ public class AuthService {
 	 * @return 저장/업데이트된 UserProfile
 	 */
 	private UserProfile saveOrUpdateUserProfile(KakaoProfile profile) {
-		// 기존 사용자 찾기 (카카오 ID로)
-		UserProfile userProfile = userProfileRepository.findByKakaoId(profile.id());
-		
-		if (userProfile == null) {
-			// 새 사용자 생성
-			userProfile = new UserProfile();
-			userProfile.setKakaoId(profile.id());
-			userProfile.setNickname(profile.nickname());
-			userProfile.setProfileImage(profile.profileImageUrl() != null ? profile.profileImageUrl() : profile.thumbnailImageUrl());
-			userProfile.setTemperature(36.5); // 기본 매너온도
-			log.info("새 사용자 생성 - kakaoId={}, nickname={}", profile.id(), profile.nickname());
-		} else {
-			// 기존 사용자 정보 업데이트
-			userProfile.setNickname(profile.nickname());
-			if (profile.profileImageUrl() != null || profile.thumbnailImageUrl() != null) {
+		try {
+			log.info("사용자 저장/업데이트 시작 - kakaoId={}, nickname={}", profile.id(), profile.nickname());
+			
+			// 기존 사용자 찾기 (카카오 ID로)
+			UserProfile userProfile = userProfileRepository.findByKakaoId(profile.id());
+			log.debug("기존 사용자 조회 결과 - kakaoId={}, 존재여부={}", profile.id(), userProfile != null);
+			
+			if (userProfile == null) {
+				// 새 사용자 생성
+				log.info("새 사용자 생성 시작 - kakaoId={}, nickname={}", profile.id(), profile.nickname());
+				userProfile = new UserProfile();
+				userProfile.setKakaoId(profile.id());
+				userProfile.setNickname(profile.nickname() != null ? profile.nickname() : "카카오 사용자");
 				userProfile.setProfileImage(profile.profileImageUrl() != null ? profile.profileImageUrl() : profile.thumbnailImageUrl());
+				userProfile.setTemperature(36.5); // 기본 매너온도
+				log.info("새 사용자 엔티티 생성 완료 - kakaoId={}, nickname={}", userProfile.getKakaoId(), userProfile.getNickname());
+			} else {
+				// 기존 사용자 정보 업데이트
+				log.info("기존 사용자 발견 - userId={}, kakaoId={}, nickname={}", 
+						userProfile.getId(), userProfile.getKakaoId(), userProfile.getNickname());
+				userProfile.setNickname(profile.nickname() != null ? profile.nickname() : userProfile.getNickname());
+				if (profile.profileImageUrl() != null || profile.thumbnailImageUrl() != null) {
+					userProfile.setProfileImage(profile.profileImageUrl() != null ? profile.profileImageUrl() : profile.thumbnailImageUrl());
+				}
+				log.info("기존 사용자 정보 업데이트 준비 완료");
 			}
-			log.info("기존 사용자 정보 업데이트 - userId={}, kakaoId={}, nickname={}", 
-					userProfile.getId(), profile.id(), profile.nickname());
+			
+			// 사용자 저장
+			log.info("데이터베이스에 사용자 저장 시작 - kakaoId={}", profile.id());
+			UserProfile saved = userProfileRepository.save(userProfile);
+			log.info("데이터베이스에 사용자 저장 완료 - userId={}, kakaoId={}, nickname={}", 
+					saved.getId(), saved.getKakaoId(), saved.getNickname());
+			
+			// 저장 확인
+			UserProfile verify = userProfileRepository.findById(saved.getId()).orElse(null);
+			if (verify == null) {
+				log.error("사용자 저장 후 조회 실패 - userId={}, kakaoId={}", saved.getId(), saved.getKakaoId());
+				throw new RuntimeException("사용자 저장 후 조회에 실패했습니다.");
+			}
+			log.info("사용자 저장 검증 완료 - userId={}, kakaoId={}", verify.getId(), verify.getKakaoId());
+			
+			return saved;
+		} catch (Exception e) {
+			log.error("사용자 저장/업데이트 중 오류 발생 - kakaoId={}, error={}", profile.id(), e.getMessage(), e);
+			throw new RuntimeException("사용자 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
 		}
-		
-		return userProfileRepository.save(userProfile);
 	}
 
 	/**
