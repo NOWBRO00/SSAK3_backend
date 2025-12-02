@@ -83,18 +83,23 @@ public class ChatRoom extends BaseEntity {
     // 최근 메시지 정보 (채팅방 목록에서 사용)
     @JsonGetter("lastMessage")
     public Message getLastMessage() {
-        if (messages == null || messages.isEmpty()) {
+        try {
+            if (messages == null || messages.isEmpty()) {
+                return null;
+            }
+            // 생성 시간 기준으로 최신 메시지 반환
+            return messages.stream()
+                    .max((m1, m2) -> {
+                        if (m1.getCreatedAt() == null && m2.getCreatedAt() == null) return 0;
+                        if (m1.getCreatedAt() == null) return -1;
+                        if (m2.getCreatedAt() == null) return 1;
+                        return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+                    })
+                    .orElse(null);
+        } catch (Exception e) {
+            // LazyInitializationException 등 예외 발생 시 null 반환
             return null;
         }
-        // 생성 시간 기준으로 최신 메시지 반환
-        return messages.stream()
-                .max((m1, m2) -> {
-                    if (m1.getCreatedAt() == null && m2.getCreatedAt() == null) return 0;
-                    if (m1.getCreatedAt() == null) return -1;
-                    if (m2.getCreatedAt() == null) return 1;
-                    return m1.getCreatedAt().compareTo(m2.getCreatedAt());
-                })
-                .orElse(null);
     }
 
     // 읽지 않은 메시지 수 (현재 사용자 기준으로 계산 필요 - 서비스 레이어에서 처리)

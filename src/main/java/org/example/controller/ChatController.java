@@ -64,8 +64,8 @@ public class ChatController {
         }
     }
 
-    // 사용자의 채팅방 목록 조회
-    @GetMapping("/rooms/user/{userId}")
+    // 사용자의 채팅방 목록 조회 (프론트엔드 호환성을 위해 두 경로 모두 지원)
+    @GetMapping({"/rooms/user/{userId}", "/user/{userId}"})
     public ResponseEntity<List<ChatRoom>> getUserChatRooms(@PathVariable Long userId) {
         try {
             log.info("GET /api/chat/rooms/user/{} 요청 받음", userId);

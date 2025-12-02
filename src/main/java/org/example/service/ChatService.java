@@ -80,6 +80,16 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
         
+        // 채팅방의 buyer, seller 초기화 (Lazy 로딩 방지)
+        if (chatRoom.getBuyer() != null) {
+            chatRoom.getBuyer().getId();
+            chatRoom.getBuyer().getNickname();
+        }
+        if (chatRoom.getSeller() != null) {
+            chatRoom.getSeller().getId();
+            chatRoom.getSeller().getNickname();
+        }
+        
         // 사용자 조회 (id 또는 kakaoId로 찾기)
         UserProfile sender = userProfileRepository.findById(senderId).orElse(null);
         if (sender == null) {
