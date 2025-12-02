@@ -12,12 +12,12 @@ spring:
   # =============================================================================
   # 데이터베이스 설정 (프로덕션)
   # =============================================================================
-  # Render에서 MySQL 데이터베이스를 생성하면 DATABASE_URL 환경 변수가 자동으로 설정됩니다.
-  # 또는 직접 설정할 수도 있습니다.
-  # MySQL 연결 URL 형식: jdbc:mysql://host:port/database?useSSL=true&serverTimezone=UTC
+  # Render에서 PostgreSQL 데이터베이스를 생성하면 DATABASE_URL 환경 변수가 자동으로 설정됩니다.
+  # Internal Database URL을 그대로 사용하면 됩니다.
+  # PostgreSQL 연결 URL 형식: jdbc:postgresql://host:port/database
   datasource:
     url: ${DATABASE_URL:jdbc:h2:mem:testdb}
-    driver-class-name: ${DB_DRIVER:com.mysql.cj.jdbc.Driver}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
     username: ${DB_USERNAME:}
     password: ${DB_PASSWORD:}
   
@@ -30,14 +30,14 @@ spring:
   # JPA/Hibernate 설정
   # =============================================================================
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect  # MySQL용 Hibernate 방언
+    database-platform: org.hibernate.dialect.PostgreSQLDialect  # PostgreSQL용 Hibernate 방언
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}  # 프로덕션에서는 update 사용
     show-sql: ${SPRING_JPA_SHOW_SQL:false}  # 프로덕션에서는 false
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 # =============================================================================
 # 카카오 OAuth 설정 (프로덕션)

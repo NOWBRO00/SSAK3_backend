@@ -31,7 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'                    // H2 데이터베이스 (개발용)
-    runtimeOnly 'com.mysql:mysql-connector-j'          // MySQL 데이터베이스 (프로덕션용, 선택사항)
+    runtimeOnly 'org.postgresql:postgresql'             // PostgreSQL 데이터베이스 (프로덕션용)
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
