@@ -20,15 +20,52 @@ public class LikeController {
 
     // 찜 추가
     @PostMapping
-    public ResponseEntity<Like> addLike(@RequestParam Long userId, @RequestParam Long productId) {
+    public ResponseEntity<Like> addLike(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long productId,
+            @RequestBody(required = false) java.util.Map<String, Object> requestBody
+    ) {
         try {
-            Like savedLike = likeService.addLike(userId, productId);
+            // @RequestBody가 있으면 우선 사용, 없으면 @RequestParam 사용
+            Long finalUserId = null;
+            Long finalProductId = null;
+            
+            if (requestBody != null) {
+                Object userIdObj = requestBody.get("userId");
+                Object productIdObj = requestBody.get("productId");
+                
+                if (userIdObj != null) {
+                    finalUserId = userIdObj instanceof Number ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
+                }
+                if (productIdObj != null) {
+                    finalProductId = productIdObj instanceof Number ? ((Number) productIdObj).longValue() : Long.parseLong(productIdObj.toString());
+                }
+            }
+            
+            // @RequestParam이 있으면 사용
+            if (finalUserId == null && userId != null) {
+                finalUserId = userId;
+            }
+            if (finalProductId == null && productId != null) {
+                finalProductId = productId;
+            }
+            
+            if (finalUserId == null || finalProductId == null) {
+                log.error("찜 추가 실패: userId 또는 productId가 없습니다. userId={}, productId={}, requestBody={}", userId, productId, requestBody);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            log.info("찜 추가 요청: userId={}, productId={}", finalUserId, finalProductId);
+            Like savedLike = likeService.addLike(finalUserId, finalProductId);
             return ResponseEntity.ok(savedLike);
         } catch (IllegalArgumentException e) {
             log.error("찜 추가 실패: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (IllegalStateException e) {
             log.error("찜 추가 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("찜 추가 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
     }

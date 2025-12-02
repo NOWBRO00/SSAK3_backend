@@ -2,6 +2,7 @@ package org.example.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ import java.util.List;
 @Table(name = "chat_rooms", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"buyer_id", "seller_id", "product_id"})
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ChatRoom extends BaseEntity {
 
     @Id

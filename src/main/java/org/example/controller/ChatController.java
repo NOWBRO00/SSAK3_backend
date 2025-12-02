@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping({"/api/chat", "/api/chatrooms"})  // 프론트엔드 호환성을 위한 경로 추가
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -56,11 +56,6 @@ public class ChatController {
         }
     }
     
-    // 프론트엔드 호환성을 위한 별칭 엔드포인트 (chatrooms -> chat/rooms)
-    @GetMapping("/chatrooms/user/{userId}")
-    public ResponseEntity<List<ChatRoom>> getUserChatRoomsAlias(@PathVariable Long userId) {
-        return getUserChatRooms(userId);
-    }
 
     // 채팅방의 메시지 목록 조회
     @GetMapping("/rooms/{chatRoomId}/messages")

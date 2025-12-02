@@ -2,6 +2,7 @@ package org.example.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,7 @@ import lombok.*;
 @Table(name = "likes", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "product_id"})
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Like extends BaseEntity {
 
     @Id

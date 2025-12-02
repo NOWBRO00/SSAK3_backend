@@ -2,6 +2,7 @@ package org.example.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "messages")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Message extends BaseEntity {
 
     @Id
