@@ -45,13 +45,21 @@ public class ChatController {
     @GetMapping("/rooms/user/{userId}")
     public ResponseEntity<List<ChatRoom>> getUserChatRooms(@PathVariable Long userId) {
         try {
+            log.info("GET /api/chat/rooms/user/{} 요청 받음", userId);
             List<ChatRoom> chatRooms = chatService.getUserChatRooms(userId);
             log.info("채팅방 목록 조회 성공: userId={}, count={}", userId, chatRooms != null ? chatRooms.size() : 0);
             return ResponseEntity.ok(chatRooms != null ? chatRooms : new ArrayList<>());
         } catch (Exception e) {
-            log.error("채팅방 목록 조회 중 오류 발생: userId={}", userId, e);
+            log.error("채팅방 목록 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
+            e.printStackTrace();
             return ResponseEntity.ok(new ArrayList<>());
         }
+    }
+    
+    // 프론트엔드 호환성을 위한 별칭 엔드포인트 (chatrooms -> chat/rooms)
+    @GetMapping("/chatrooms/user/{userId}")
+    public ResponseEntity<List<ChatRoom>> getUserChatRoomsAlias(@PathVariable Long userId) {
+        return getUserChatRooms(userId);
     }
 
     // 채팅방의 메시지 목록 조회

@@ -83,47 +83,62 @@ public class ChatService {
 
     // 채팅방 목록 조회 (사용자가 참여한 모든 채팅방)
     public List<ChatRoom> getUserChatRooms(Long userId) {
-        UserProfile user = userProfileRepository.findById(userId)
-                .orElse(null);
+        try {
+            log.info("사용자 채팅방 조회 시작 - userId={}", userId);
+            UserProfile user = userProfileRepository.findById(userId)
+                    .orElse(null);
+            
+            if (user == null) {
+                log.debug("UserProfile id로 사용자를 찾지 못함. kakaoId로 시도: {}", userId);
+                // 카카오 ID로 시도
+                user = userProfileRepository.findByKakaoId(userId);
+            }
+            
+            if (user == null) {
+                log.warn("사용자를 찾을 수 없습니다. userId={} (UserProfile id 또는 kakaoId로 조회 실패)", userId);
+                return new ArrayList<>();
+            }
+            
+            log.debug("사용자 조회 성공 - userId={}, kakaoId={}, nickname={}", user.getId(), user.getKakaoId(), user.getNickname());
+
+            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyerOrSeller(user, user);
+            log.debug("채팅방 조회 완료: {}개", chatRooms != null ? chatRooms.size() : 0);
         
-        if (user == null) {
-            // 카카오 ID로 시도
-            user = userProfileRepository.findByKakaoId(userId);
-        }
-        
-        if (user == null) {
+            // Lazy 로딩 엔티티 초기화
+            if (chatRooms != null && !chatRooms.isEmpty()) {
+                List<ChatRoom> validRooms = new ArrayList<>();
+                chatRooms.forEach(room -> {
+                    try {
+                        if (room.getBuyer() != null) {
+                            room.getBuyer().getId();
+                            room.getBuyer().getNickname();
+                        }
+                        if (room.getSeller() != null) {
+                            room.getSeller().getId();
+                            room.getSeller().getNickname();
+                        }
+                        if (room.getProduct() != null) {
+                            room.getProduct().getId();
+                            room.getProduct().getTitle();
+                        }
+                        // 메시지 초기화
+                        if (room.getMessages() != null) {
+                            room.getMessages().size();
+                        }
+                        validRooms.add(room);
+                    } catch (Exception e) {
+                        log.error("채팅방 {} 초기화 중 오류: {}", room.getId(), e.getMessage(), e);
+                    }
+                });
+                log.info("유효한 채팅방 {}개 반환", validRooms.size());
+                return validRooms;
+            }
+            log.info("채팅방이 없습니다. 빈 리스트 반환");
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("사용자 채팅방 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
             return new ArrayList<>();
         }
-
-        List<ChatRoom> chatRooms = chatRoomRepository.findByBuyerOrSeller(user, user);
-        
-        // Lazy 로딩 엔티티 초기화
-        if (chatRooms != null && !chatRooms.isEmpty()) {
-            chatRooms.forEach(room -> {
-                try {
-                    if (room.getBuyer() != null) {
-                        room.getBuyer().getId();
-                        room.getBuyer().getNickname();
-                    }
-                    if (room.getSeller() != null) {
-                        room.getSeller().getId();
-                        room.getSeller().getNickname();
-                    }
-                    if (room.getProduct() != null) {
-                        room.getProduct().getId();
-                        room.getProduct().getTitle();
-                    }
-                    // 메시지 초기화
-                    if (room.getMessages() != null) {
-                        room.getMessages().size();
-                    }
-                } catch (Exception e) {
-                    log.error("채팅방 초기화 중 오류: {}", e.getMessage());
-                }
-            });
-        }
-        
-        return chatRooms != null ? chatRooms : new ArrayList<>();
     }
 
     // 채팅방의 메시지 목록 조회
