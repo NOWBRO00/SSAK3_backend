@@ -20,14 +20,15 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    // 채팅방 생성 또는 조회
-    @PostMapping("/rooms")
+    // 채팅방 생성 또는 조회 (프론트엔드 호환성을 위해 두 경로 모두 지원)
+    @PostMapping({"/rooms", ""})  // /api/chat/rooms, /api/chatrooms/rooms, /api/chatrooms 모두 지원
     public ResponseEntity<ChatRoom> getOrCreateChatRoom(
             @RequestParam Long buyerId,
             @RequestParam Long sellerId,
             @RequestParam Long productId
     ) {
         try {
+            log.info("채팅방 생성/조회 요청: buyerId={}, sellerId={}, productId={}", buyerId, sellerId, productId);
             ChatRoom chatRoom = chatService.getOrCreateChatRoom(buyerId, sellerId, productId);
             log.info("채팅방 조회/생성 성공: chatRoomId={}, buyerId={}, sellerId={}, productId={}", 
                     chatRoom.getId(), buyerId, sellerId, productId);

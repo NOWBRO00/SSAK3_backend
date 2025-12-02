@@ -30,15 +30,33 @@ public class ChatService {
 
     // 채팅방 생성 또는 조회 (이미 있으면 반환)
     public ChatRoom getOrCreateChatRoom(Long buyerId, Long sellerId, Long productId) {
-        // 사용자 및 상품 조회
-        UserProfile buyer = userProfileRepository.findById(buyerId)
-                .orElseThrow(() -> new IllegalArgumentException("구매자를 찾을 수 없습니다."));
+        log.info("채팅방 생성/조회 시작: buyerId={}, sellerId={}, productId={}", buyerId, sellerId, productId);
         
-        UserProfile seller = userProfileRepository.findById(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
+        // 사용자 조회 (id 또는 kakaoId로 찾기)
+        UserProfile buyer = userProfileRepository.findById(buyerId).orElse(null);
+        if (buyer == null) {
+            log.debug("UserProfile id로 구매자를 찾지 못함. kakaoId로 시도: {}", buyerId);
+            buyer = userProfileRepository.findByKakaoId(buyerId);
+        }
+        if (buyer == null) {
+            log.error("구매자를 찾을 수 없습니다. buyerId={} (UserProfile id 또는 kakaoId로 조회 실패)", buyerId);
+            throw new IllegalArgumentException("구매자를 찾을 수 없습니다. buyerId: " + buyerId);
+        }
+        log.debug("구매자 조회 성공: id={}, kakaoId={}, nickname={}", buyer.getId(), buyer.getKakaoId(), buyer.getNickname());
+        
+        UserProfile seller = userProfileRepository.findById(sellerId).orElse(null);
+        if (seller == null) {
+            log.debug("UserProfile id로 판매자를 찾지 못함. kakaoId로 시도: {}", sellerId);
+            seller = userProfileRepository.findByKakaoId(sellerId);
+        }
+        if (seller == null) {
+            log.error("판매자를 찾을 수 없습니다. sellerId={} (UserProfile id 또는 kakaoId로 조회 실패)", sellerId);
+            throw new IllegalArgumentException("판매자를 찾을 수 없습니다. sellerId: " + sellerId);
+        }
+        log.debug("판매자 조회 성공: id={}, kakaoId={}, nickname={}", seller.getId(), seller.getKakaoId(), seller.getNickname());
         
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. productId: " + productId));
 
         // 이미 존재하는 채팅방이 있는지 확인
         Optional<ChatRoom> existingRoom = chatRoomRepository.findByBuyerAndSellerAndProduct(buyer, seller, product);
@@ -62,8 +80,16 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
         
-        UserProfile sender = userProfileRepository.findById(senderId)
-                .orElseThrow(() -> new IllegalArgumentException("발신자를 찾을 수 없습니다."));
+        // 사용자 조회 (id 또는 kakaoId로 찾기)
+        UserProfile sender = userProfileRepository.findById(senderId).orElse(null);
+        if (sender == null) {
+            log.debug("UserProfile id로 발신자를 찾지 못함. kakaoId로 시도: {}", senderId);
+            sender = userProfileRepository.findByKakaoId(senderId);
+        }
+        if (sender == null) {
+            log.error("발신자를 찾을 수 없습니다. senderId={} (UserProfile id 또는 kakaoId로 조회 실패)", senderId);
+            throw new IllegalArgumentException("발신자를 찾을 수 없습니다. senderId: " + senderId);
+        }
 
         // 발신자가 채팅방의 구매자 또는 판매자인지 확인
         if (!chatRoom.getBuyer().getId().equals(senderId) && 
