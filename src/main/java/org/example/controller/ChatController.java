@@ -50,9 +50,13 @@ public class ChatController {
             List<ChatRoom> chatRooms = chatService.getUserChatRooms(userId);
             log.info("채팅방 목록 조회 성공: userId={}, count={}", userId, chatRooms != null ? chatRooms.size() : 0);
             return ResponseEntity.ok(chatRooms != null ? chatRooms : new ArrayList<>());
+        } catch (IllegalArgumentException e) {
+            log.warn("채팅방 목록 조회 실패 (사용자 없음): userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.ok(new ArrayList<>());
         } catch (Exception e) {
             log.error("채팅방 목록 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
             e.printStackTrace();
+            // 예외가 발생해도 빈 리스트를 반환하여 500 에러 방지
             return ResponseEntity.ok(new ArrayList<>());
         }
     }

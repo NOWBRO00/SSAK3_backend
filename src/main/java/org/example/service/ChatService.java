@@ -144,8 +144,37 @@ public class ChatService {
                             room.getSeller().getNickname();
                         }
                         if (room.getProduct() != null) {
+                            // product 기본 필드 초기화
                             room.getProduct().getId();
                             room.getProduct().getTitle();
+                            room.getProduct().getPrice();
+                            room.getProduct().getDescription();
+                            room.getProduct().getStatus();
+                            
+                            // product의 seller 초기화
+                            if (room.getProduct().getSeller() != null) {
+                                room.getProduct().getSeller().getId();
+                                room.getProduct().getSeller().getNickname();
+                                room.getProduct().getSeller().getKakaoId();
+                            }
+                            
+                            // product의 category 초기화
+                            if (room.getProduct().getCategory() != null) {
+                                room.getProduct().getCategory().getId();
+                                room.getProduct().getCategory().getName();
+                            }
+                            
+                            // product의 images 초기화
+                            if (room.getProduct().getImages() != null) {
+                                room.getProduct().getImages().size();
+                                room.getProduct().getImages().forEach(img -> {
+                                    if (img != null) {
+                                        img.getId();
+                                        img.getImageUrl();
+                                        img.getOrderIndex();
+                                    }
+                                });
+                            }
                         }
                         // 메시지 초기화
                         if (room.getMessages() != null) {
