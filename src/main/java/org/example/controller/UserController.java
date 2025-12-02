@@ -55,15 +55,30 @@ public class UserController {
         }
     }
 
-    // 특정 유저 조회
+    // 특정 유저 조회 (id 또는 kakaoId로 조회)
     @GetMapping("/{id}")
     public ResponseEntity<UserProfile> getUserById(@PathVariable Long id) {
         try {
-            return userRepository.findById(id)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            log.info("유저 조회 요청: id={}", id);
+            
+            // 먼저 UserProfile의 id로 조회 시도
+            UserProfile user = userRepository.findById(id).orElse(null);
+            
+            // id로 찾지 못했으면 kakaoId로 시도
+            if (user == null) {
+                log.debug("UserProfile id로 사용자를 찾지 못함. kakaoId로 시도: {}", id);
+                user = userRepository.findByKakaoId(id);
+            }
+            
+            if (user != null) {
+                log.info("유저 조회 성공: userId={}, kakaoId={}, nickname={}", user.getId(), user.getKakaoId(), user.getNickname());
+                return ResponseEntity.ok(user);
+            } else {
+                log.warn("유저를 찾을 수 없습니다: id={} (UserProfile id 또는 kakaoId로 조회 실패)", id);
+                return ResponseEntity.notFound().build();
+            }
         } catch (Exception e) {
-            log.error("유저 조회 중 오류 발생: userId={}", id, e);
+            log.error("유저 조회 중 오류 발생: id={}", id, e);
             return ResponseEntity.notFound().build();
         }
     }
