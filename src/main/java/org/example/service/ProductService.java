@@ -2,6 +2,7 @@ package org.example.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.entity.*;
 import org.example.repository.CategoryRepository;
 import org.example.repository.ProductImageRepository;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,8 +48,23 @@ public class ProductService {
         // 카테고리 & 판매자 조회
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. categoryId: " + categoryId));
+        
+        // sellerId가 카카오 ID일 수도 있고, UserProfile의 id일 수도 있음
         UserProfile seller = userProfileRepository.findById(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다. sellerId: " + sellerId));
+                .orElse(null);
+        
+        // UserProfile의 id로 찾지 못했으면 카카오 ID로 시도
+        if (seller == null) {
+            log.debug("UserProfile id로 사용자를 찾지 못함. kakaoId로 시도: {}", sellerId);
+            seller = userProfileRepository.findByKakaoId(sellerId);
+        }
+        
+        if (seller == null) {
+            log.error("사용자를 찾을 수 없습니다. sellerId={} (UserProfile id 또는 kakaoId로 조회 실패). 카카오 로그인을 먼저 진행해주세요.", sellerId);
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다. sellerId: " + sellerId + " (카카오 로그인을 먼저 진행해주세요.)");
+        }
+        
+        log.debug("판매자 조회 성공 - userId={}, kakaoId={}, nickname={}", seller.getId(), seller.getKakaoId(), seller.getNickname());
 
         // 상품 엔티티 생성 및 저장
         Product product = new Product();
