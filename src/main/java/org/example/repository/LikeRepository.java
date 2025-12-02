@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
     //특정 유저가 찜한 상품 목록
-    @EntityGraph(attributePaths = {"product", "product.images"})
+    @EntityGraph(attributePaths = {"product", "product.images", "product.category", "product.seller"})
     List<Like> findByUser(UserProfile user);
 
     //특정 상품을 찜한 유저 목록

@@ -1,6 +1,7 @@
 package org.example.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.entity.Like;
 import org.example.entity.Product;
 import org.example.entity.UserProfile;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -81,47 +83,78 @@ public class LikeService {
     //내 찜리스트 보기
     public List<Like> getUserLikes(Long userId) {
         try {
+            log.info("찜 목록 조회 시작: userId={}", userId);
             // userId가 카카오 ID일 수도 있고, UserProfile의 id일 수도 있음
             UserProfile user = userRepository.findById(userId)
                     .orElse(null);
             
             // UserProfile의 id로 찾지 못했으면 카카오 ID로 시도
             if (user == null) {
+                log.debug("UserProfile id로 사용자를 찾지 못함. kakaoId로 시도: {}", userId);
                 user = userRepository.findByKakaoId(userId);
             }
             
             if (user == null) {
+                log.warn("사용자를 찾을 수 없습니다. userId={} (UserProfile id 또는 kakaoId로 조회 실패)", userId);
                 // 사용자가 없으면 빈 리스트 반환
                 return new ArrayList<>();
             }
             
+            log.debug("사용자 조회 성공: id={}, kakaoId={}, nickname={}", user.getId(), user.getKakaoId(), user.getNickname());
             List<Like> likes = likeRepository.findByUser(user);
-            // product, category, images를 명시적으로 초기화하여 LazyInitializationException 방지
+            log.debug("찜 조회 완료: {}개", likes != null ? likes.size() : 0);
+            // product, category, images, seller를 명시적으로 초기화하여 LazyInitializationException 방지
             if (likes != null && !likes.isEmpty()) {
+                List<Like> validLikes = new ArrayList<>();
                 likes.forEach(like -> {
                     try {
                         if (like.getProduct() != null) {
+                            // 기본 필드 초기화
                             like.getProduct().getId();
                             like.getProduct().getTitle();
+                            like.getProduct().getPrice();
+                            like.getProduct().getDescription();
+                            like.getProduct().getStatus();
+                            
+                            // seller 초기화
+                            if (like.getProduct().getSeller() != null) {
+                                like.getProduct().getSeller().getId();
+                                like.getProduct().getSeller().getNickname();
+                                like.getProduct().getSeller().getKakaoId();
+                            }
+                            
                             // category 초기화
                             if (like.getProduct().getCategory() != null) {
                                 like.getProduct().getCategory().getId();
                                 like.getProduct().getCategory().getName();
                             }
+                            
                             // images 초기화
                             if (like.getProduct().getImages() != null) {
                                 like.getProduct().getImages().size();
+                                like.getProduct().getImages().forEach(img -> {
+                                    if (img != null) {
+                                        img.getId();
+                                        img.getImageUrl();
+                                        img.getOrderIndex();
+                                    }
+                                });
                             }
+                            
+                            validLikes.add(like);
                         }
                     } catch (Exception e) {
-                        System.err.println("찜 초기화 중 오류: " + e.getMessage());
+                        log.error("찜 초기화 중 오류: likeId={}, error={}", like.getId(), e.getMessage(), e);
                     }
                 });
+                log.info("유효한 찜 {}개 반환", validLikes.size());
+                return validLikes;
             }
-            return likes != null ? likes : new ArrayList<>();
+            log.info("찜이 없습니다. 빈 리스트 반환");
+            return new ArrayList<>();
         } catch (Exception e) {
             // 예외 발생 시 빈 리스트 반환
-            System.err.println("찜 목록 조회 중 오류: " + e.getMessage());
+            log.error("찜 목록 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
