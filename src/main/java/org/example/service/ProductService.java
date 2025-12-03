@@ -292,6 +292,70 @@ public class ProductService {
         return products != null ? products : new ArrayList<>();
     }
 
+    // 키워드로 상품 검색
+    public List<Product> searchProducts(String keyword) {
+        try {
+            log.info("상품 검색 시작: keyword={}", keyword);
+            
+            if (keyword == null || keyword.trim().isEmpty()) {
+                log.warn("검색 키워드가 비어있습니다. 전체 상품을 반환합니다.");
+                return getAllProducts();
+            }
+            
+            List<Product> products = productRepository.searchByKeyword(keyword.trim());
+            log.info("상품 검색 완료: keyword={}, count={}", keyword, products != null ? products.size() : 0);
+            
+            // Lazy 로딩 엔티티 초기화
+            if (products != null && !products.isEmpty()) {
+                List<Product> validProducts = new ArrayList<>();
+                products.forEach(product -> {
+                    try {
+                        // seller 초기화 및 검증
+                        if (product.getSeller() == null) {
+                            log.warn("상품 {}의 seller가 null입니다. 건너뜁니다.", product.getId());
+                            return;
+                        }
+                        product.getSeller().getId();
+                        product.getSeller().getNickname();
+                        product.getSeller().getKakaoId();
+                        
+                        // category 초기화 및 검증
+                        if (product.getCategory() == null) {
+                            log.warn("상품 {}의 category가 null입니다. 건너뜁니다.", product.getId());
+                            return;
+                        }
+                        product.getCategory().getId();
+                        product.getCategory().getName();
+                        
+                        // images 초기화
+                        if (product.getImages() != null) {
+                            product.getImages().size();
+                            product.getImages().forEach(img -> {
+                                if (img != null) {
+                                    img.getId();
+                                    img.getImageUrl();
+                                    img.getOrderIndex();
+                                }
+                            });
+                        }
+                        
+                        validProducts.add(product);
+                    } catch (Exception e) {
+                        log.error("상품 {} 초기화 중 오류: {}", product != null ? product.getId() : "null", e.getMessage(), e);
+                    }
+                });
+                log.info("유효한 상품 {}개 반환", validProducts.size());
+                return validProducts;
+            }
+            log.info("검색 결과가 없습니다. 빈 리스트 반환");
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("상품 검색 중 오류 발생: keyword={}, error={}", keyword, e.getMessage(), e);
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
     // 상품 수정
     public Product updateProduct(Long id, Product updated) {
         Product product = productRepository.findById(id)

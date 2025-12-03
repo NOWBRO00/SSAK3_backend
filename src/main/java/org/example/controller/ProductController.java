@@ -164,6 +164,22 @@ public class ProductController {
         }
     }
 
+    // 키워드로 상품 검색
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String keyword) {
+        try {
+            log.info("상품 검색 요청: keyword={}", keyword);
+            List<Product> products = productService.searchProducts(keyword);
+            log.info("상품 검색 성공: keyword={}, count={}", keyword, products != null ? products.size() : 0);
+            return ResponseEntity.ok(products != null ? products : new ArrayList<>());
+        } catch (Exception e) {
+            log.error("상품 검색 중 오류 발생: keyword={}, error={}", keyword, e.getMessage(), e);
+            e.printStackTrace();
+            // 에러가 발생해도 빈 리스트를 반환하여 500 에러 방지
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+    }
+
     // 상품 수정
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {

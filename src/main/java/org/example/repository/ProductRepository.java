@@ -5,6 +5,8 @@ import org.example.entity.Product;
 import org.example.entity.UserProfile;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -23,6 +25,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     
     @EntityGraph(attributePaths = {"images", "seller", "category"})
     List<Product> findBySeller(UserProfile seller);
+    
+    // 키워드로 상품 검색 (제목 또는 설명에 포함)
+    @EntityGraph(attributePaths = {"images", "seller", "category"})
+    @Query("SELECT p FROM Product p WHERE p.title LIKE %:keyword% OR p.description LIKE %:keyword%")
+    List<Product> searchByKeyword(@Param("keyword") String keyword);
 }
 
 
