@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "chat_rooms", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"buyer_id", "seller_id", "product_id"})
 })
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class ChatRoom extends BaseEntity {
 
     @Id

@@ -13,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "messages")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler", "chatRoom", "sender"}, ignoreUnknown = true)
 public class Message extends BaseEntity {
 
     @Id
