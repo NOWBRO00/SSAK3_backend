@@ -57,9 +57,11 @@ public class Message extends BaseEntity {
         return sender;
     }
 
-    @JsonGetter("chatRoom")
-    public ChatRoom getChatRoomForJson() {
-        return chatRoom;
-    }
+    // 순환 참조 방지를 위해 chatRoom은 반환하지 않음
+    // chatRoomId만 제공하면 충분함
+    // @JsonGetter("chatRoom")
+    // public ChatRoom getChatRoomForJson() {
+    //     return chatRoom;
+    // }
 }
 
