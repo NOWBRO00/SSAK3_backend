@@ -159,6 +159,52 @@ public class AuthService {
 	}
 
 	/**
+	 * 테스트 계정으로 로그인합니다.
+	 * 카카오 OAuth 없이 kakaoId로 직접 로그인할 수 있습니다.
+	 *
+	 * @param kakaoId 테스트 계정의 카카오 ID
+	 * @return 액세스 토큰/리프레시 토큰 및 사용자 프로필 정보를 포함한 응답
+	 */
+	public LoginResponse loginWithTestAccount(Long kakaoId) {
+		log.info("테스트 계정 로그인 시작 - kakaoId={}", kakaoId);
+		
+		// 사용자 조회 또는 생성
+		UserProfile userProfile = userProfileRepository.findByKakaoId(kakaoId);
+		
+		if (userProfile == null) {
+			log.warn("테스트 계정을 찾을 수 없습니다 - kakaoId={}. 새 계정을 생성합니다.", kakaoId);
+			// 테스트 계정 생성
+			userProfile = new UserProfile();
+			userProfile.setKakaoId(kakaoId);
+			userProfile.setNickname("테스트사용자" + kakaoId);
+			userProfile.setTemperature(36.5);
+			userProfile = userProfileRepository.save(userProfile);
+			log.info("테스트 계정 생성 완료 - userId={}, kakaoId={}", userProfile.getId(), userProfile.getKakaoId());
+		}
+		
+		// KakaoProfile 생성 (테스트용)
+		KakaoProfile profile = new KakaoProfile(
+				userProfile.getKakaoId(),
+				userProfile.getNickname(),
+				null, // email
+				userProfile.getProfileImage(), // profileImageUrl
+				userProfile.getProfileImage()  // thumbnailImageUrl
+		);
+		
+		// 토큰 발급
+		TokenPair tokens = issueToken(profile);
+		
+		log.info("테스트 계정 로그인 완료 - userId={}, kakaoId={}", userProfile.getId(), userProfile.getKakaoId());
+		return new LoginResponse(
+				tokens.accessToken(),
+				tokens.refreshToken(),
+				profile,
+				userProfile.getId(),      // 백엔드 내부 userId
+				userProfile.getKakaoId()  // 카카오 ID
+		);
+	}
+
+	/**
 	 * 우리 서비스에서 사용할 임시 토큰을 발급합니다.
 	 *
 	 * <p>현재는 데모용으로 UUID 기반 토큰을 생성하고 있으며,

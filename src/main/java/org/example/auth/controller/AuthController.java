@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.example.auth.dto.AuthCodeRequest;
@@ -58,6 +59,31 @@ public class AuthController {
 		} catch (Exception e) {
 			log.error("카카오 로그인 처리 중 예상치 못한 오류 발생 - code={}, error={}", request.code(), e.getClass().getSimpleName(), e);
 			throw new RuntimeException("카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
+		}
+	}
+
+	@PostMapping("/test-login")
+	/**
+	 * 테스트 계정으로 로그인합니다.
+	 * 카카오 OAuth 없이 kakaoId로 직접 로그인할 수 있습니다.
+	 * 
+	 * <p>개발/테스트 환경에서만 사용해야 합니다.</p>
+	 *
+	 * @param kakaoId 테스트 계정의 카카오 ID
+	 * @return 액세스 토큰, 리프레시 토큰, 사용자 프로필을 포함한 응답
+	 */
+	public ResponseEntity<LoginResponse> loginWithTestAccount(@RequestParam Long kakaoId) {
+		log.info("POST /api/auth/test-login 호출 - kakaoId={}", kakaoId);
+		try {
+			LoginResponse response = authService.loginWithTestAccount(kakaoId);
+			log.info("테스트 계정 로그인 성공 - userId={}, kakaoId={}", response.userId(), response.kakaoId());
+			return ResponseEntity.ok(response);
+		} catch (IllegalArgumentException e) {
+			log.error("잘못된 요청 파라미터 - kakaoId={}, message={}", kakaoId, e.getMessage(), e);
+			throw e; // GlobalExceptionHandler에서 처리
+		} catch (Exception e) {
+			log.error("테스트 계정 로그인 처리 중 예상치 못한 오류 발생 - kakaoId={}, error={}", kakaoId, e.getClass().getSimpleName(), e);
+			throw new RuntimeException("테스트 계정 로그인 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
 		}
 	}
 }
