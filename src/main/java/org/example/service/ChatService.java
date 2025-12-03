@@ -385,9 +385,47 @@ public class ChatService {
                 });
     }
 
-    // 채팅방 삭제
-    public void deleteChatRoom(Long chatRoomId) {
+    // 채팅방 삭제 (나가기) - 채팅방에 참여한 사용자만 삭제 가능
+    public void deleteChatRoom(Long chatRoomId, Long userId) {
+        log.info("채팅방 삭제 시작: chatRoomId={}, userId={}", chatRoomId, userId);
+        
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+        
+        // 사용자 조회 (id 또는 kakaoId로 찾기)
+        UserProfile user = userProfileRepository.findById(userId).orElse(null);
+        if (user == null) {
+            log.debug("UserProfile id로 사용자를 찾지 못함. kakaoId로 시도: {}", userId);
+            user = userProfileRepository.findByKakaoId(userId);
+        }
+        if (user == null) {
+            log.error("사용자를 찾을 수 없습니다. userId={} (UserProfile id 또는 kakaoId로 조회 실패)", userId);
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다. userId: " + userId);
+        }
+        
+        // 채팅방의 buyer, seller 초기화
+        if (chatRoom.getBuyer() != null) {
+            chatRoom.getBuyer().getId();
+        }
+        if (chatRoom.getSeller() != null) {
+            chatRoom.getSeller().getId();
+        }
+        
+        // 사용자가 채팅방에 참여한 사용자인지 확인
+        Long userInternalId = user.getId();
+        Long buyerId = chatRoom.getBuyer() != null ? chatRoom.getBuyer().getId() : null;
+        Long sellerId = chatRoom.getSeller() != null ? chatRoom.getSeller().getId() : null;
+        
+        if (!userInternalId.equals(buyerId) && !userInternalId.equals(sellerId)) {
+            log.error("채팅방 삭제 권한 없음: userId={}, userInternalId={}, buyerId={}, sellerId={}", 
+                    userId, userInternalId, buyerId, sellerId);
+            throw new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다. 채팅방을 삭제할 권한이 없습니다.");
+        }
+        
+        // 채팅방 삭제 (cascade = CascadeType.ALL이므로 메시지도 함께 삭제됨)
+        log.info("채팅방 삭제 실행: chatRoomId={}, userId={}", chatRoomId, userId);
         chatRoomRepository.deleteById(chatRoomId);
+        log.info("채팅방 삭제 완료: chatRoomId={}, userId={}", chatRoomId, userId);
     }
 }
 

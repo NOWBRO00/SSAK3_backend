@@ -157,15 +157,22 @@ public class ChatController {
         }
     }
 
-    // 채팅방 삭제
+    // 채팅방 삭제 (나가기)
     @DeleteMapping("/rooms/{chatRoomId}")
-    public ResponseEntity<Void> deleteChatRoom(@PathVariable Long chatRoomId) {
+    public ResponseEntity<Void> deleteChatRoom(
+            @PathVariable Long chatRoomId,
+            @RequestParam Long userId
+    ) {
         try {
-            chatService.deleteChatRoom(chatRoomId);
-            log.info("채팅방 삭제 성공: chatRoomId={}", chatRoomId);
+            log.info("채팅방 삭제 요청: chatRoomId={}, userId={}", chatRoomId, userId);
+            chatService.deleteChatRoom(chatRoomId, userId);
+            log.info("채팅방 삭제 성공: chatRoomId={}, userId={}", chatRoomId, userId);
             return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.error("채팅방 삭제 실패: chatRoomId={}, userId={}, error={}", chatRoomId, userId, e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("채팅방 삭제 중 오류 발생: chatRoomId={}", chatRoomId, e);
+            log.error("채팅방 삭제 중 오류 발생: chatRoomId={}, userId={}", chatRoomId, userId, e);
             return ResponseEntity.internalServerError().build();
         }
     }
