@@ -58,7 +58,7 @@ public class Product extends BaseEntity {
 
     // 이미지 목록
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference   // ✅ 순환참조 끊기 (Product → ProductImage 방향만 직렬화)
+    @JsonIgnore  // images 필드는 직접 직렬화하지 않고, imageUrls getter를 통해 제공
     @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
 
