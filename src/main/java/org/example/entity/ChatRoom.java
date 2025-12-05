@@ -102,12 +102,15 @@ public class ChatRoom extends BaseEntity {
         }
     }
 
-    // 읽지 않은 메시지 수 (현재 사용자 기준으로 계산 필요 - 서비스 레이어에서 처리)
+    // 읽지 않은 메시지 수 (현재 사용자 기준으로 계산)
+    // 서비스 레이어에서 setUnreadCount()로 설정됨
+    @Transient
+    @Setter
+    private Long unreadCount = 0L;
+    
     @JsonGetter("unreadCount")
     public Long getUnreadCount() {
-        // 이 필드는 서비스 레이어에서 동적으로 설정해야 함
-        // 현재는 null 반환 (서비스에서 별도로 계산)
-        return null;
+        return unreadCount != null ? unreadCount : 0L;
     }
 }
 

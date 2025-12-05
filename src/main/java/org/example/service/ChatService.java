@@ -296,15 +296,27 @@ public class ChatService {
                                         log.warn("메시지 {}의 sender 초기화 중 오류: {}", msg != null ? msg.getId() : "null", e.getMessage());
                                     }
                                 });
+                                
+                                // 읽지 않은 메시지 수 계산 (현재 사용자가 보낸 메시지 제외)
+                                try {
+                                    long unreadCount = messageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, finalUser);
+                                    room.setUnreadCount(unreadCount);
+                                    log.debug("채팅방 {}의 읽지 않은 메시지 수: {}", room.getId(), unreadCount);
+                                } catch (Exception e) {
+                                    log.warn("채팅방 {}의 읽지 않은 메시지 수 계산 중 오류: {}", room.getId(), e.getMessage());
+                                    room.setUnreadCount(0L);
+                                }
                             } else {
                                 // 메시지가 없으면 빈 리스트로 설정
                                 room.setMessages(new ArrayList<>());
+                                room.setUnreadCount(0L);
                             }
                         } catch (Exception e) {
                             log.warn("채팅방 {}의 메시지 조회 중 오류: {}", room.getId(), e.getMessage());
                             // 메시지 조회 실패해도 채팅방은 반환 (빈 리스트로 설정)
                             try {
                                 room.setMessages(new ArrayList<>());
+                                room.setUnreadCount(0L);
                             } catch (Exception ex) {
                                 log.warn("채팅방 {}에 빈 메시지 리스트 설정 실패: {}", room.getId(), ex.getMessage());
                             }
