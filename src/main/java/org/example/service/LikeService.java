@@ -48,6 +48,23 @@ public class LikeService {
                     throw new IllegalStateException("이미 찜한 상품입니다.");
                 });
 
+        // 판매자 온도 증가 (찜 추가 시 +0.1도)
+        try {
+            UserProfile seller = product.getSeller();
+            if (seller != null) {
+                // seller 초기화
+                seller.getId();
+                double currentTemperature = seller.getTemperature();
+                double newTemperature = Math.min(currentTemperature + 0.1, 99.9); // 최대 99.9도
+                seller.setTemperature(newTemperature);
+                userRepository.save(seller);
+                log.info("판매자 온도 증가: sellerId={}, {}도 -> {}도", seller.getId(), currentTemperature, newTemperature);
+            }
+        } catch (Exception e) {
+            log.warn("판매자 온도 증가 중 오류 발생: productId={}, error={}", productId, e.getMessage());
+            // 온도 증가 실패해도 찜 추가는 진행
+        }
+
         Like like = Like.builder()
                 .user(user)
                 .product(product)
@@ -76,6 +93,23 @@ public class LikeService {
 
         Like like = likeRepository.findByUserAndProduct(user, product)
                 .orElseThrow(() -> new IllegalArgumentException("찜하지 않은 상품입니다."));
+
+        // 판매자 온도 감소 (찜 취소 시 -0.1도)
+        try {
+            UserProfile seller = product.getSeller();
+            if (seller != null) {
+                // seller 초기화
+                seller.getId();
+                double currentTemperature = seller.getTemperature();
+                double newTemperature = Math.max(currentTemperature - 0.1, 36.5); // 최소 36.5도
+                seller.setTemperature(newTemperature);
+                userRepository.save(seller);
+                log.info("판매자 온도 감소: sellerId={}, {}도 -> {}도", seller.getId(), currentTemperature, newTemperature);
+            }
+        } catch (Exception e) {
+            log.warn("판매자 온도 감소 중 오류 발생: productId={}, error={}", productId, e.getMessage());
+            // 온도 감소 실패해도 찜 취소는 진행
+        }
 
         likeRepository.delete(like);
     }
