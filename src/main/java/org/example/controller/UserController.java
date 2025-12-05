@@ -106,30 +106,40 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserProfile> getCurrentUser(
             @RequestParam(required = false) Long kakaoId,
+            @RequestParam(required = false) Long userId,
             @RequestHeader(value = "X-Kakao-Id", required = false) Long kakaoIdFromHeader
     ) {
         try {
             // 쿼리 파라미터 또는 헤더에서 kakaoId 가져오기
             Long targetKakaoId = kakaoId != null ? kakaoId : kakaoIdFromHeader;
             
-            if (targetKakaoId == null) {
-                log.warn("현재 사용자 조회 실패: kakaoId가 제공되지 않았습니다.");
-                return ResponseEntity.badRequest().build();
+            // kakaoId가 없으면 userId로 조회 시도
+            UserProfile user = null;
+            if (targetKakaoId != null) {
+                log.info("현재 사용자 조회 요청: kakaoId={}", targetKakaoId);
+                user = userRepository.findByKakaoId(targetKakaoId);
+            } else if (userId != null) {
+                log.info("현재 사용자 조회 요청: userId={}", userId);
+                // userId로 조회 시도 (내부 ID 또는 kakaoId일 수 있음)
+                user = userRepository.findById(userId).orElse(null);
+                if (user == null) {
+                    user = userRepository.findByKakaoId(userId);
+                }
             }
-            
-            log.info("현재 사용자 조회 요청: kakaoId={}", targetKakaoId);
-            UserProfile user = userRepository.findByKakaoId(targetKakaoId);
             
             if (user != null) {
                 log.info("현재 사용자 조회 성공: userId={}, kakaoId={}, nickname={}, temperature={}", 
                         user.getId(), user.getKakaoId(), user.getNickname(), user.getTemperature());
                 return ResponseEntity.ok(user);
             } else {
-                log.warn("현재 사용자를 찾을 수 없습니다: kakaoId={}", targetKakaoId);
+                log.warn("현재 사용자 조회 실패: kakaoId 또는 userId가 제공되지 않았거나 사용자를 찾을 수 없습니다. kakaoId={}, userId={}", 
+                        targetKakaoId, userId);
+                // 400 대신 404 반환 (사용자를 찾을 수 없음)
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            log.error("현재 사용자 조회 중 오류 발생: kakaoId={}", kakaoId != null ? kakaoId : kakaoIdFromHeader, e);
+            log.error("현재 사용자 조회 중 오류 발생: kakaoId={}, userId={}", 
+                    kakaoId != null ? kakaoId : kakaoIdFromHeader, userId, e);
             return ResponseEntity.internalServerError().build();
         }
     }

@@ -192,5 +192,33 @@ public class LikeService {
             return new ArrayList<>();
         }
     }
+
+    // 특정 사용자가 특정 상품을 찜했는지 확인
+    public boolean isLiked(Long userId, Long productId) {
+        try {
+            // userId가 카카오 ID일 수도 있고, UserProfile의 id일 수도 있음
+            UserProfile user = userRepository.findById(userId).orElse(null);
+            
+            if (user == null) {
+                user = userRepository.findByKakaoId(userId);
+            }
+            
+            if (user == null) {
+                log.debug("사용자를 찾을 수 없습니다. userId={}", userId);
+                return false;
+            }
+            
+            Product product = productRepository.findById(productId).orElse(null);
+            if (product == null) {
+                log.debug("상품을 찾을 수 없습니다. productId={}", productId);
+                return false;
+            }
+            
+            return likeRepository.findByUserAndProduct(user, product).isPresent();
+        } catch (Exception e) {
+            log.warn("찜 확인 중 오류 발생: userId={}, productId={}, error={}", userId, productId, e.getMessage());
+            return false;
+        }
+    }
 }
 

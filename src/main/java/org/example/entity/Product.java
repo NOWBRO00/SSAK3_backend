@@ -92,5 +92,19 @@ public class Product extends BaseEntity {
                 .map(ProductImage::getImageUrl)
                 .collect(Collectors.toList());
     }
+
+    // 찜 상태 (프론트엔드에서 사용, DB에 저장되지 않음)
+    @Transient
+    @Builder.Default
+    private Boolean isLiked = false;
+
+    @JsonGetter("isLiked")
+    public Boolean getIsLiked() {
+        return isLiked != null ? isLiked : false;
+    }
+
+    public void setIsLiked(Boolean isLiked) {
+        this.isLiked = isLiked;
+    }
 }
 

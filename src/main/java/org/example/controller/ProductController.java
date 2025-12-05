@@ -151,15 +151,18 @@ public class ProductController {
         }
     }
 
-    // 판매자별 조회
+    // 판매자별 조회 (현재 사용자 ID를 쿼리 파라미터로 받아서 찜 상태 포함)
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<List<Product>> getProductsBySeller(@PathVariable Long sellerId) {
+    public ResponseEntity<List<Product>> getProductsBySeller(
+            @PathVariable Long sellerId,
+            @RequestParam(required = false) Long userId
+    ) {
         try {
-            List<Product> products = productService.getProductsBySeller(sellerId);
-            log.info("판매자별 상품 조회 성공: sellerId={}, count={}", sellerId, products != null ? products.size() : 0);
+            List<Product> products = productService.getProductsBySeller(sellerId, userId);
+            log.info("판매자별 상품 조회 성공: sellerId={}, userId={}, count={}", sellerId, userId, products != null ? products.size() : 0);
             return ResponseEntity.ok(products != null ? products : new ArrayList<>());
         } catch (Exception e) {
-            log.error("판매자별 상품 조회 중 오류 발생: sellerId={}", sellerId, e);
+            log.error("판매자별 상품 조회 중 오류 발생: sellerId={}, userId={}", sellerId, userId, e);
             return ResponseEntity.ok(new ArrayList<>()); // 빈 리스트 반환
         }
     }

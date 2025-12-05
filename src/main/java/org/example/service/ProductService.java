@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.*;
 import org.example.repository.CategoryRepository;
+import org.example.repository.LikeRepository;
 import org.example.repository.ProductImageRepository;
 import org.example.repository.ProductRepository;
 import org.example.repository.UserProfileRepository;
@@ -28,6 +29,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final UserProfileRepository userProfileRepository;
     private final ProductImageRepository productImageRepository;
+    private final LikeRepository likeRepository;
 
     private static final String UPLOAD_DIR = System.getProperty("user.dir") + File.separator + "uploads" + File.separator;
 
@@ -249,8 +251,8 @@ public class ProductService {
         return products != null ? products : new ArrayList<>();
     }
 
-    // 판매자별 조회
-    public List<Product> getProductsBySeller(Long sellerId) {
+    // 판매자별 조회 (현재 사용자 ID를 받아서 찜 상태 포함)
+    public List<Product> getProductsBySeller(Long sellerId, Long currentUserId) {
         // sellerId가 카카오 ID일 수도 있고, UserProfile의 id일 수도 있음
         UserProfile seller = userProfileRepository.findById(sellerId)
                 .orElse(null);
@@ -268,6 +270,16 @@ public class ProductService {
         List<Product> products = productRepository.findBySeller(seller);
         // seller, category, images를 명시적으로 초기화하여 LazyInitializationException 방지
         if (products != null && !products.isEmpty()) {
+            // 현재 사용자 조회 (찜 상태 확인용)
+            UserProfile currentUser = null;
+            if (currentUserId != null) {
+                currentUser = userProfileRepository.findById(currentUserId).orElse(null);
+                if (currentUser == null) {
+                    currentUser = userProfileRepository.findByKakaoId(currentUserId);
+                }
+            }
+            
+            final UserProfile finalCurrentUser = currentUser;
             products.forEach(product -> {
                 try {
                     // seller 초기화
@@ -284,12 +296,24 @@ public class ProductService {
                     if (product.getImages() != null) {
                         product.getImages().size();
                     }
+                    // 찜 상태 확인 및 설정
+                    if (finalCurrentUser != null) {
+                        boolean isLiked = likeRepository.findByUserAndProduct(finalCurrentUser, product).isPresent();
+                        product.setIsLiked(isLiked);
+                    } else {
+                        product.setIsLiked(false);
+                    }
                 } catch (Exception e) {
                     System.err.println("상품 초기화 중 오류: " + e.getMessage());
                 }
             });
         }
         return products != null ? products : new ArrayList<>();
+    }
+
+    // 판매자별 조회 (기존 메서드, 호환성 유지)
+    public List<Product> getProductsBySeller(Long sellerId) {
+        return getProductsBySeller(sellerId, null);
     }
 
     // 키워드로 상품 검색
